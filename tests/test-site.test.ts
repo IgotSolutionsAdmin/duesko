@@ -50,4 +50,13 @@ describe("test site flag", () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     assert.equal(useMockRepository(), true);
   });
+
+  it("uses Supabase when it is configured, including on the test site", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_DUESKO_TEST_SITE", "true");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+    assert.equal(isTestSite(), true);
+    assert.equal(useMockRepository(), false);
+  });
 });

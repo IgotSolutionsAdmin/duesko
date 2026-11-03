@@ -16,7 +16,7 @@ export const supabaseCookieOptions = {
 
 type Tokens = { accessToken: string; refreshToken: string };
 
-async function readTokens(): Promise<Tokens | null> {
+export async function readSupabaseTokens(): Promise<Tokens | null> {
   const jar = await cookies();
   const accessToken = jar.get(SUPABASE_ACCESS_COOKIE)?.value;
   const refreshToken = jar.get(SUPABASE_REFRESH_COOKIE)?.value;
@@ -26,7 +26,7 @@ async function readTokens(): Promise<Tokens | null> {
 
 /** Validates the access token with Supabase Auth and returns auth.users.id. */
 export async function readVerifiedUserId(): Promise<string | null> {
-  const tokens = await readTokens();
+  const tokens = await readSupabaseTokens();
   if (!tokens) return null;
   const supabase = createAuthClient();
   const { data, error } = await supabase.auth.getUser(tokens.accessToken);
@@ -38,7 +38,7 @@ export async function openDataClient(): Promise<{
   client: SupabaseClient;
   sessionUserId: string;
 } | null> {
-  const tokens = await readTokens();
+  const tokens = await readSupabaseTokens();
   if (!tokens) return null;
   const client = await createDataClient(tokens.accessToken, tokens.refreshToken);
   if (!client) return null;

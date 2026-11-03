@@ -5,16 +5,29 @@ const authOptions = {
   persistSession: false,
   autoRefreshToken: false,
   detectSessionInUrl: false,
-} as const;
+  flowType: "pkce" as const,
+  storageKey: "duesko-auth",
+};
 
-/** Anon client for Supabase Auth. Does not attach a user session. */
-export function createAuthClient(): SupabaseClient {
+type PkceStorage = {
+  getItem: (key: string) => string | null | Promise<string | null>;
+  setItem: (key: string, value: string) => void | Promise<void>;
+  removeItem: (key: string) => void | Promise<void>;
+};
+
+/**
+ * Anon client for Supabase Auth. Does not attach a user session.
+ * Pass storage so a magic-link PKCE verifier can live in httpOnly cookies.
+ */
+export function createAuthClient(storage?: PkceStorage): SupabaseClient {
   const url = supabaseUrl();
   const anonKey = supabaseAnonKey();
   if (!url || !anonKey) {
     throw new Error("Supabase is not configured");
   }
-  return createClient(url, anonKey, { auth: authOptions });
+  return createClient(url, anonKey, {
+    auth: storage ? { ...authOptions, storage } : authOptions,
+  });
 }
 
 /**

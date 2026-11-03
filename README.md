@@ -37,7 +37,7 @@ Copy `.env.example` to `.env.local`. Leave the values empty to use the mock. Fil
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser and server. Together with the anon key, this switches the app off the mock. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser and server. Row level security still applies. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only, in `lib/supabase/service.ts`. Bypasses row level security. Never use a `NEXT_PUBLIC_` name for it. |
-| `NEXT_PUBLIC_DUESKO_TEST_SITE` | Set to `true` for a public sample site. Turns on the test banner, the mock, and passwordless demo sign-in in production. |
+| `NEXT_PUBLIC_DUESKO_TEST_SITE` | Set to `true` for a public sample site. Turns on the test banner. The mock and passwordless demo sign-in are used only when the Supabase URL and anon key are unset. |
 
 The dashboard may label the public key "anon public" or "publishable". Put that value in `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
@@ -50,11 +50,15 @@ Apply the migration files in this order:
 
 The second migration adds proof status, the review audit columns, and a private Storage bucket named `payment-proofs`. Object paths are `{hoa_id}/{charge_id}/{uuid}.ext`. Only the resident for that charge can upload. That resident and the HOA officers can read the file through a short-lived signed URL.
 
+`supabase/seed/test_hoa.sql` is sample data for a test association. It is not a migration and it contains no emails. Apply it by hand. Add `public.users` only after each person exists in Authentication, with `public.users.id` equal to `auth.users.id`.
+
 Then:
 
-1. In Authentication, enable the email provider. Create each person with email and password. For a local demo, turn off email confirmation so the password sign-in works immediately.
-2. In the SQL editor, insert the association, its units, and `public.users`. `public.users.id` must be the same id as `auth.users.id`. A resident row needs `unit_id`. The SQL editor runs with rights that bypass row level security, which is required for the first association because authenticated clients cannot insert `hoas`.
-3. Put the three names above in `.env.local` and restart the app. Demo sign-in is not shown. Sign in with the email and password.
+1. In Authentication → URL Configuration, set the Site URL to the app origin and allow `https://<your-host>/**` as a redirect URL.
+2. Invite each person from Authentication → Users. Send the invite with redirect `https://<your-host>/auth/callback`. Do not set a password for them. The link opens `/auth/callback`, then `/auth/set-password`, where they choose their own password. After that they go to `/admin` or `/resident` based on `public.users.role`.
+3. A person who already has a password can also use **Email me a sign-in link** on the login page. That magic link returns to `/auth/callback` and exchanges the code for a session.
+4. In the SQL editor, insert the association, its units, and `public.users`. A resident row needs `unit_id`. The SQL editor runs with rights that bypass row level security, which is required for the first association because authenticated clients cannot insert `hoas`.
+5. Put the public Supabase URL and anon key in `.env.local` and restart the app. Demo sign-in is not shown. Sign in with the email and the password that person chose, or with a magic link.
 
 `lib/supabase/service.ts` can build a service-role client for server-side maintenance. Pages and client components do not import it. PayMongo keys are not part of this step.
 

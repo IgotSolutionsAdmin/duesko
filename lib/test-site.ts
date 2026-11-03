@@ -7,11 +7,14 @@ export function isTestSite(): boolean {
 
 /**
  * The in-memory mock and demo sign-in.
- * Local dev uses them whenever Supabase is unset.
- * A production build uses them only when the test-site flag is on.
+ * Supabase, when its public URL and anon key are set, always wins so invited
+ * accounts use real data even on the test site.
+ * Otherwise local dev uses the mock, and a production build uses it only when
+ * the test-site flag is on.
  */
 export function useMockRepository(): boolean {
+  if (isSupabaseConfigured()) return false;
   if (isTestSite()) return true;
   if (process.env.NODE_ENV === "production") return false;
-  return !isSupabaseConfigured();
+  return true;
 }

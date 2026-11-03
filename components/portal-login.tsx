@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
+import { sendMagicLink } from "@/lib/auth-link-actions";
 import { signInAsDemo, signInWithPassword } from "@/lib/demo-auth-actions";
 import { seed } from "@/lib/mock/seed";
 import { homePath, roleLabel } from "@/lib/roles";
@@ -11,6 +12,8 @@ import type { Role } from "@/lib/types";
 const authErrors: Record<string, string> = {
   missing: "Email and password are required.",
   invalid: "Email or password is incorrect.",
+  sent: "Check your email for a sign-in link. It expires soon and works once.",
+  unsent: "The sign-in link could not be sent.",
   profile:
     "That account has no association profile yet. public.users.id must match auth.users.id.",
 };
@@ -50,15 +53,24 @@ export async function PortalLogin({
   }
 
   if (!useMockRepository() && isSupabaseConfigured()) {
+    const portal = role === "resident" ? "resident" : "admin";
     return (
-      <LoginFrame title={title} lede="Use the email and password for your Supabase Auth account.">
+      <LoginFrame title={title} lede="Use your email and password, or ask for a one-time sign-in link.">
         <form action={signInWithPassword} className="flex flex-col gap-3">
           <label htmlFor="email" className="text-sm font-medium">Email</label>
           <input id="email" name="email" type="email" required autoComplete="email" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
           <label htmlFor="password" className="text-sm font-medium">Password</label>
           <input id="password" name="password" type="password" required autoComplete="current-password" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
-          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+          {error && errorCode !== "sent" && errorCode !== "unsent" ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="h-12 w-full text-base">Sign in</Button>
+        </form>
+        <form action={sendMagicLink} className="flex flex-col gap-3">
+          <input type="hidden" name="portal" value={portal} />
+          <label htmlFor="magic-email" className="text-sm font-medium">Email for a sign-in link</label>
+          <input id="magic-email" name="email" type="email" required autoComplete="email" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
+          {errorCode === "sent" ? <p role="status" className="text-sm text-teal-deep">{error}</p> : null}
+          {errorCode === "unsent" ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+          <Button type="submit" variant="outline" className="h-12 w-full bg-white text-base">Email me a sign-in link</Button>
         </form>
       </LoginFrame>
     );
