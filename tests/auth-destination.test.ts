@@ -82,6 +82,18 @@ describe("auth destination", () => {
     assert.equal(roleFromUserRows(rows, null), null);
   });
 
+  it("sends password recovery to set-password then the portal", () => {
+    assert.equal(
+      destinationAfterAuth({
+        linkType: "recovery",
+        invitedAt: null,
+        passwordSet: true,
+        role: "admin_treasurer",
+      }),
+      "/auth/set-password",
+    );
+  });
+
   it("ignores unknown link types", () => {
     assert.equal(linkTypeFromParam("not-a-type"), null);
     assert.equal(linkTypeFromParam("recovery"), "recovery");

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType, Session } from "@supabase/supabase-js";
+import { applyAuthNextDestination } from "@/lib/auth-reset-url";
 import { linkTypeFromParam } from "@/lib/auth-destination";
 import { routeAfterSession, roleFor } from "@/lib/auth-session";
 import { DEMO_COOKIE } from "@/lib/demo-cookie";
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
   if (error || !data?.session) {
     return page("That sign-in link is invalid or has expired.", false);
   }
-  return redirectWithSession(request, supabase, data.session, field(form, "type"));
+  return redirectWithSession(request, supabase, data.session, field(form, "type"), field(form, "next"));
 }
 
 async function exchangeCode(request: NextRequest, code: string, flowId: string | null) {
@@ -80,7 +81,14 @@ async function exchangeCode(request: NextRequest, code: string, flowId: string |
     return response;
   }
   const linkType = redirectTypeOf(data);
-  return redirectWithSession(request, supabase, data.session, linkType, pkce);
+  return redirectWithSession(
+    request,
+    supabase,
+    data.session,
+    linkType,
+    request.nextUrl.searchParams.get("next"),
+    pkce,
+  );
 }
 
 async function verifyTokenHash(request: NextRequest, tokenHash: string, type: EmailOtpType) {
@@ -89,7 +97,13 @@ async function verifyTokenHash(request: NextRequest, tokenHash: string, type: Em
   if (error || !data?.session) {
     return page("That sign-in link is invalid or has expired.", false);
   }
-  return redirectWithSession(request, supabase, data.session, type);
+  return redirectWithSession(
+    request,
+    supabase,
+    data.session,
+    type,
+    request.nextUrl.searchParams.get("next"),
+  );
 }
 
 async function redirectWithSession(
@@ -97,15 +111,19 @@ async function redirectWithSession(
   supabase: ReturnType<typeof createAuthClient>,
   session: Session,
   linkType: string | null,
+  next: string | null,
   pkce?: PkceJar,
 ) {
   const role = await roleFor(supabase, session.user.id);
-  const destination = routeAfterSession({
-    linkType,
-    invitedAt: session.user.invited_at,
-    metadata: session.user.user_metadata,
-    role,
-  });
+  const destination = applyAuthNextDestination(
+    routeAfterSession({
+      linkType,
+      invitedAt: session.user.invited_at,
+      metadata: session.user.user_metadata,
+      role,
+    }),
+    next ?? request.nextUrl.searchParams.get("next"),
+  );
   const response = NextResponse.redirect(new URL(destination, request.url));
   const jar = await cookies();
   jar.set(SUPABASE_ACCESS_COOKIE, session.access_token, supabaseCookieOptions);
@@ -188,10 +206,12 @@ function documentFor(message: string, recoverHash: boolean): string {
         <input type="hidden" name="access_token" />
         <input type="hidden" name="refresh_token" />
         <input type="hidden" name="type" />
+        <input type="hidden" name="next" />
       </form>
       <script>
         (function () {
           var status = document.getElementById("status");
+          var page = new URL(window.location.href);
           var hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
           var access = hash.get("access_token");
           var refresh = hash.get("refresh_token");
@@ -207,8 +227,9 @@ function documentFor(message: string, recoverHash: boolean): string {
           var form = document.getElementById("session");
           form.access_token.value = access;
           form.refresh_token.value = refresh;
-          form.type.value = hash.get("type") || "";
-          history.replaceState(null, "", window.location.pathname);
+          form.type.value = hash.get("type") || page.searchParams.get("type") || "";
+          form.next.value = page.searchParams.get("next") || "";
+          history.replaceState(null, "", page.pathname + page.search);
           form.submit();
         })();
       </script>`

@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
-import { sendMagicLink } from "@/lib/auth-link-actions";
+import { sendMagicLink, sendPasswordResetEmail } from "@/lib/auth-link-actions";
 import { signInAsDemo, signInWithPassword } from "@/lib/demo-auth-actions";
 import { seed } from "@/lib/mock/seed";
 import { homePath, roleLabel } from "@/lib/roles";
@@ -16,20 +17,25 @@ const authErrors: Record<string, string> = {
   unsent: "The sign-in link could not be sent.",
   profile:
     "That account has no association profile yet. public.users.id must match auth.users.id.",
+  "reset-sent": "If that email has an account, we sent a link.",
 };
 
 export async function PortalLogin({
   role,
   errorCode,
+  forgot,
 }: {
   role: Role;
   errorCode?: string;
+  forgot?: boolean;
 }) {
   const current = await getCurrentUser();
   if (current) redirect(homePath(current.role));
 
   const title = role === "admin_treasurer" ? "Officer sign in" : "Resident sign in";
   const error = errorCode ? (authErrors[errorCode] ?? null) : null;
+  const noticeRole =
+    errorCode === "sent" || errorCode === "reset-sent" ? "status" : "alert";
 
   if (useMockRepository() && isTestSite()) {
     const userId =
@@ -41,7 +47,7 @@ export async function PortalLogin({
         ? "Sign in as demo admin (Ana Reyes)"
         : "Sign in as demo resident (Juan dela Cruz)";
     return (
-      <LoginFrame title={title} lede="No password. This sample account is not a real person." notice={error} noticeRole={errorCode === "sent" ? "status" : "alert"}>
+      <LoginFrame title={title} lede="No password. This sample account is not a real person." notice={error} noticeRole={noticeRole}>
         <form action={signInAsDemo}>
           <input type="hidden" name="userId" value={userId} />
           <Button type="submit" className="h-12 w-full text-base">
@@ -54,8 +60,29 @@ export async function PortalLogin({
 
   if (!useMockRepository() && isSupabaseConfigured()) {
     const portal = role === "resident" ? "resident" : "admin";
+    const loginPath = portal === "resident" ? "/resident/login" : "/admin/login";
+    if (forgot) {
+      return (
+        <LoginFrame
+          title="Forgot or set password?"
+          lede="Enter your email. If an account exists, we will send a link to choose a new password."
+          notice={error}
+          noticeRole={noticeRole}
+        >
+          <form action={sendPasswordResetEmail} className="flex flex-col gap-3">
+            <input type="hidden" name="portal" value={portal} />
+            <label htmlFor="reset-email" className="text-sm font-medium">Email</label>
+            <input id="reset-email" name="email" type="email" required autoComplete="email" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
+            <Button type="submit" className="h-12 w-full text-base">Email me a reset link</Button>
+          </form>
+          <Link href={loginPath} className="text-center text-sm font-medium text-teal-deep underline-offset-4 hover:underline">
+            Back to sign in
+          </Link>
+        </LoginFrame>
+      );
+    }
     return (
-      <LoginFrame title={title} lede="Use your email and password, or ask for a one-time sign-in link." notice={error} noticeRole={errorCode === "sent" ? "status" : "alert"}>
+      <LoginFrame title={title} lede="Use your email and password, or ask for a one-time sign-in link." notice={error} noticeRole={noticeRole}>
         <form action={signInWithPassword} className="flex flex-col gap-3">
           <input type="hidden" name="portal" value={portal} />
           <label htmlFor="email" className="text-sm font-medium">Email</label>
@@ -64,6 +91,9 @@ export async function PortalLogin({
           <input id="password" name="password" type="password" required autoComplete="current-password" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
           <Button type="submit" className="h-12 w-full text-base">Sign in</Button>
         </form>
+        <Link href={`${loginPath}?forgot=1`} className="text-sm font-medium text-teal-deep underline-offset-4 hover:underline">
+          Forgot or set password?
+        </Link>
         <form action={sendMagicLink} className="flex flex-col gap-3">
           <input type="hidden" name="portal" value={portal} />
           <label htmlFor="magic-email" className="text-sm font-medium">Email for a sign-in link</label>
@@ -92,6 +122,7 @@ export async function PortalLogin({
       title={title}
       lede="DEV ONLY. This mock sign-in is hidden when Supabase is configured."
       notice={error}
+      noticeRole={noticeRole}
     >
       <div className="flex flex-col gap-3">
         {people.map((user) => {

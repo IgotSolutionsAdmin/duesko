@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { passwordResetRedirectTo } from "./auth-reset-url";
 import { roleFor, writeSupabaseSession } from "./auth-session";
 import { passwordChoiceError } from "./password-choice";
 import { homePath } from "./roles";
@@ -11,6 +12,23 @@ import { cookiePkceStorage } from "./supabase/pkce-cookies";
 import { readSupabaseTokens } from "./supabase/session";
 
 const AUTH_CALLBACK_PATH = "/auth/callback";
+
+/** Sends a password reset link. Always shows the same neutral confirmation. */
+export async function sendPasswordResetEmail(formData: FormData) {
+  const portal = formData.get("portal") === "resident" ? "resident" : "admin";
+  const loginPath = portal === "resident" ? "/resident/login" : "/admin/login";
+  if (!isSupabaseConfigured()) redirect(`${loginPath}?auth=reset-sent`);
+
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) redirect(`${loginPath}?forgot=1&auth=missing`);
+
+  const origin = await requestOrigin();
+  const supabase = createAuthClient(await cookiePkceStorage());
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: passwordResetRedirectTo(origin),
+  });
+  redirect(`${loginPath}?auth=reset-sent`);
+}
 
 /** Sends a magic link. Does not create an account and does not choose a password. */
 export async function sendMagicLink(formData: FormData) {

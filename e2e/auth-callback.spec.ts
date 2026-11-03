@@ -16,7 +16,13 @@ test("set password without a session returns to officer sign-in", async ({ page 
 test("a rejected sign-in stays on the officer login", async ({ page }) => {
   await page.goto("/sign-in?auth=invalid");
   await expect(page).toHaveURL(/\/admin\/login\?auth=invalid$/);
-  await expect(page.getByRole("alert")).toHaveText("Email or password is incorrect.");
+  await expect(page.getByText("Email or password is incorrect.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Choose a portal" })).toHaveCount(0);
+});
+
+test("password reset confirmation stays on the officer login", async ({ page }) => {
+  await page.goto("/admin/login?auth=reset-sent");
+  await expect(page.getByText("If that email has an account, we sent a link.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Choose a portal" })).toHaveCount(0);
 });
 

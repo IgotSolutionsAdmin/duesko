@@ -7,7 +7,7 @@ export const metadata = { title: "Officer sign in" };
 export default function AdminLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ auth?: string }>;
+  searchParams: Promise<{ auth?: string; forgot?: string }>;
 }) {
   return (
     <Suspense fallback={<p className="px-5 py-6 text-sm text-ink/70">Opening sign in…</p>}>
@@ -16,8 +16,12 @@ export default function AdminLoginPage({
   );
 }
 
-async function AdminLogin({ searchParams }: { searchParams: Promise<{ auth?: string }> }) {
+async function AdminLogin({
+  searchParams,
+}: {
+  searchParams: Promise<{ auth?: string; forgot?: string }>;
+}) {
   await connection();
-  const { auth } = await searchParams;
-  return <PortalLogin role="admin_treasurer" errorCode={auth} />;
+  const { auth, forgot } = await searchParams;
+  return <PortalLogin role="admin_treasurer" errorCode={auth} forgot={forgot === "1"} />;
 }

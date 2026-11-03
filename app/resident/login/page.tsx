@@ -7,7 +7,7 @@ export const metadata = { title: "Resident sign in" };
 export default function ResidentLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ auth?: string }>;
+  searchParams: Promise<{ auth?: string; forgot?: string }>;
 }) {
   return (
     <Suspense fallback={<p className="px-5 py-6 text-sm text-ink/70">Opening sign in…</p>}>
@@ -19,9 +19,9 @@ export default function ResidentLoginPage({
 async function ResidentLogin({
   searchParams,
 }: {
-  searchParams: Promise<{ auth?: string }>;
+  searchParams: Promise<{ auth?: string; forgot?: string }>;
 }) {
   await connection();
-  const { auth } = await searchParams;
-  return <PortalLogin role="resident" errorCode={auth} />;
+  const { auth, forgot } = await searchParams;
+  return <PortalLogin role="resident" errorCode={auth} forgot={forgot === "1"} />;
 }
