@@ -31,6 +31,13 @@ for (const viewport of [
       await expect(page.getByTestId("how-to-pay").first()).toContainText(howToPay);
       await expect(page.locator('[data-status="rejected"]').first()).toBeVisible();
       await expect(page.getByText("Rejected: Reference number does not match").first()).toBeVisible();
+      const rejectedRow = page
+        .getByRole("heading", { name: "Gate repair special assessment" })
+        .locator("xpath=ancestor::li[1]");
+      await expect(rejectedRow.getByText("Rejected: Reference number does not match")).toBeVisible();
+      const reasonY = (await rejectedRow.getByText("Rejected: Reference number does not match").boundingBox())?.y ?? 0;
+      const reuploadY = (await rejectedRow.getByRole("link", { name: "Re-upload" }).boundingBox())?.y ?? 0;
+      expect(reasonY).toBeLessThan(reuploadY);
       await expect(page.getByRole("link", { name: "Re-upload" }).first()).toBeVisible();
       await expect(page.getByText("Sample", { exact: true }).first()).toBeVisible();
 
@@ -139,7 +146,8 @@ for (const viewport of [
       const header = heading.locator("xpath=ancestor::header[1]");
       await expect(header.getByText("Sample", { exact: true })).toBeVisible();
       await page.goto("/admin/export");
-      await expect(page.getByLabel("Select month")).toBeVisible();
+      await expect(page.getByLabel("Month (optional)")).toBeVisible();
+      await expect(page.getByLabel("Month (optional)")).toHaveValue("");
     });
   });
 }

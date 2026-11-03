@@ -1,5 +1,8 @@
 import { Suspense } from "react";
 import { ListError, ListSkeleton } from "@/components/list-state";
+import { requireRole } from "@/lib/auth";
+import { exportMonthOptions, formatExportMonthLabel } from "@/lib/export-months";
+import { getRepository } from "@/lib/get-repository";
 
 export const metadata = { title: "Export" };
 
@@ -21,6 +24,14 @@ async function ExportForm({
   searchParams: Promise<{ error?: string }>;
 }) {
   const error = (await searchParams).error;
+  const user = await requireRole("admin_treasurer");
+  const repository = getRepository();
+  const [charges, payments] = await Promise.all([
+    repository.listCharges(user.id),
+    repository.listPayments(user.id),
+  ]);
+  const months = exportMonthOptions(charges, payments);
+
   return (
     <div className="flex flex-col gap-4">
       <header>
@@ -47,16 +58,22 @@ async function ExportForm({
           <option value="payments">Payments</option>
         </select>
         <label htmlFor="month" className="text-sm font-medium">
-          Select month
+          Month (optional)
         </label>
-        <input
+        <select
           id="month"
           name="month"
-          type="month"
-          aria-label="Select month"
+          defaultValue=""
+          aria-label="Month (optional)"
           className="h-12 rounded-2xl border border-border bg-mist px-3 text-base"
-        />
-        <p className="text-sm text-ink/60">Optional. Leave blank for all months.</p>
+        >
+          <option value="">All months</option>
+          {months.map((month) => (
+            <option key={month} value={month}>
+              {formatExportMonthLabel(month)}
+            </option>
+          ))}
+        </select>
         <label htmlFor="status" className="text-sm font-medium">
           Status (optional)
         </label>

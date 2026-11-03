@@ -61,7 +61,7 @@ async function NewCharge({
           </label>
           <input id="dues-period" name="period" type="month" className={fieldClass} />
           <label htmlFor="dues-name" className="text-sm font-medium text-ink">
-            Charge name
+            Charge name (optional)
           </label>
           <input
             id="dues-name"

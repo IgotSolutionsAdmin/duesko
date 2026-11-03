@@ -15,12 +15,16 @@ export default defineConfig({
   projects: [
     {
       name: "app",
-      testIgnore: ["**/test-site.spec.ts", "**/day6-screens.spec.ts"],
+      testIgnore: [
+        "**/test-site.spec.ts",
+        "**/day6-screens.spec.ts",
+        "**/uma-review-3-screens.spec.ts",
+      ],
       use: { baseURL: "http://127.0.0.1:43117" },
     },
     {
       name: "screens",
-      testMatch: "**/day6-screens.spec.ts",
+      testMatch: ["**/day6-screens.spec.ts", "**/uma-review-3-screens.spec.ts"],
       use: { baseURL: "http://127.0.0.1:43119" },
     },
     {

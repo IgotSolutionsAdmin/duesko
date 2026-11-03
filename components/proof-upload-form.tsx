@@ -9,7 +9,6 @@ import {
   proofFieldErrors,
   type ProofFieldErrors,
 } from "@/lib/payments";
-import { formatCentavos } from "@/lib/money";
 import type { Charge } from "@/lib/types";
 
 const fieldClass =
@@ -101,7 +100,7 @@ export function ProofUploadForm({
             const pending = pendingChargeIds.includes(charge.id);
             return (
               <option key={charge.id} value={charge.id} disabled={pending}>
-                {charge.description} · {formatCentavos(charge.amountCentavos)}
+                {charge.description}
                 {pending ? " (pending review)" : ""}
               </option>
             );
