@@ -150,3 +150,12 @@ form:has(input[name="rateType"][value="per_sqm"]:checked) .unit-area {
   display: flex;
   flex-direction: column;
 }
+
+.special-units {
+  display: none;
+}
+
+form:has(input[name="scope"][value="selected"]:checked) .special-units {
+  display: flex;
+  flex-direction: column;
+}

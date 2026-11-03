@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { Shell } from "@/components/shell";
-import { getDemoUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { homePath } from "@/lib/roles";
 
 export default function HomePage() {
@@ -19,7 +19,7 @@ export default function HomePage() {
 }
 
 async function HomeGate() {
-  const user = await getDemoUser();
+  const user = await getCurrentUser();
   redirect(user ? homePath(user.role) : "/sign-in");
   return null;
 }

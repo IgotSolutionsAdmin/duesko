@@ -8,6 +8,19 @@ import type {
   UnitDraft,
 } from "./types";
 
+export interface MonthlyDuesInput {
+  period: string;
+  dueDate: string;
+  description: string;
+}
+
+export interface SpecialAssessmentInput {
+  description: string;
+  amountCentavos: number;
+  dueDate: string;
+  unitIds: string[];
+}
+
 export type Failure = { ok: false; message: string };
 
 export type Success<T> = { ok: true; value: T };
@@ -18,8 +31,9 @@ export type Result<T> = Success<T> | Failure;
  * Data seam for DuesKo. Pages call this interface and pass the signed-in
  * user id. The implementation decides which rows that role may see.
  *
- * `getRepository()` currently returns the in-memory mock. A Supabase
- * implementation should satisfy this same interface and replace that factory.
+ * `getRepository()` returns Supabase when the public env vars are set, and
+ * the in-memory mock otherwise. A Supabase implementation satisfies this
+ * same interface.
  * Callers look up the user by id; they do not pass a role that the
  * implementation is expected to trust.
  */
@@ -34,6 +48,14 @@ export interface DuesRepository {
     unitId: string,
     draft: UnitDraft,
   ): Promise<Result<Unit>>;
+  createMonthlyDues(
+    userId: string,
+    input: MonthlyDuesInput,
+  ): Promise<Result<Charge[]>>;
+  createSpecialAssessment(
+    userId: string,
+    input: SpecialAssessmentInput,
+  ): Promise<Result<Charge[]>>;
   listCharges(userId: string): Promise<Charge[]>;
   listPayments(userId: string): Promise<Payment[]>;
   listPaymentLinks(userId: string): Promise<PaymentLink[]>;

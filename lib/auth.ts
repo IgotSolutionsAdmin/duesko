@@ -4,10 +4,18 @@ import { redirect } from "next/navigation";
 import { DEMO_COOKIE } from "./demo-cookie";
 import { getRepository } from "./get-repository";
 import { homePath } from "./roles";
+import { isSupabaseConfigured } from "./supabase/env";
+import { readVerifiedUserId } from "./supabase/session";
 import type { AppUser, Role } from "./types";
 
-/** Reads the DEV ONLY demo cookie and resolves it against the mock repository. */
-export async function getDemoUser(): Promise<AppUser | null> {
+/** The signed-in user. Supabase Auth when configured, otherwise the DEV ONLY cookie. */
+export async function getCurrentUser(): Promise<AppUser | null> {
+  if (isSupabaseConfigured()) {
+    const userId = await readVerifiedUserId();
+    if (!userId) return null;
+    return getRepository().getUser(userId);
+  }
+
   const jar = await cookies();
   const userId = jar.get(DEMO_COOKIE)?.value;
   if (!userId) return null;
@@ -16,7 +24,7 @@ export async function getDemoUser(): Promise<AppUser | null> {
 
 /** Sends an anonymous visitor to sign-in, and the other role to their own home. */
 export async function requireRole(role: Role): Promise<AppUser> {
-  const user = await getDemoUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   if (user.role !== role) redirect(homePath(user.role));
   return user;

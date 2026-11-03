@@ -1,0 +1,183 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { describe, it } from "node:test";
+import { seed } from "../lib/mock/seed";
+
+const resident = seed.users.find((user) => user.role === "resident");
+const admin = seed.users.find((user) => user.role === "admin_treasurer");
+if (!resident?.unitId || !admin) {
+  throw new Error("Seed is missing the demo admin treasurer or resident");
+}
+
+const database = "duesko_rls";
+
+function psqlAvailable(): boolean {
+  try {
+    execFileSync("sudo", ["-u", "postgres", "psql", "-d", "postgres", "-c", "select 1"], {
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function psql(db: string, sql: string): string {
+  return execFileSync(
+    "sudo",
+    ["-u", "postgres", "psql", "-d", db, "-v", "ON_ERROR_STOP=1", "-t", "-A"],
+    { encoding: "utf8", input: sql },
+  );
+}
+
+function sqlText(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+function seedSql(): string {
+  const authUsers = seed.users
+    .map((user) => `insert into auth.users (id) values ('${user.id}');`)
+    .join("\n");
+  const hoas = seed.hoas
+    .map(
+      (hoa) =>
+        `insert into public.hoas (id, registered_name) values ('${hoa.id}', ${sqlText(hoa.registeredName)});`,
+    )
+    .join("\n");
+  const units = seed.units
+    .map(
+      (unit) =>
+        `insert into public.units (id, hoa_id, label, area_sqm, rate_type, rate_centavos) values ('${unit.id}', '${unit.hoaId}', ${sqlText(unit.label)}, ${unit.areaSqm ?? "null"}, '${unit.rateType}', ${unit.rateCentavos});`,
+    )
+    .join("\n");
+  const users = seed.users
+    .map(
+      (user) =>
+        `insert into public.users (id, hoa_id, unit_id, email, full_name, role) values ('${user.id}', '${user.hoaId}', ${user.unitId ? `'${user.unitId}'` : "null"}, ${sqlText(user.email)}, ${sqlText(user.fullName)}, '${user.role}');`,
+    )
+    .join("\n");
+  const charges = seed.charges
+    .map(
+      (charge) =>
+        `insert into public.charges (id, hoa_id, unit_id, kind, description, period, amount_centavos, due_date, status) values ('${charge.id}', '${charge.hoaId}', '${charge.unitId}', '${charge.kind}', ${sqlText(charge.description)}, ${charge.period ? sqlText(charge.period) : "null"}, ${charge.amountCentavos}, '${charge.dueDate}', '${charge.status}');`,
+    )
+    .join("\n");
+  return [authUsers, hoas, units, users, charges].join("\n");
+}
+
+function asUser(userId: string, statement: string): string {
+  const output = psql(
+    database,
+    `begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '${userId}', true);
+${statement}
+rollback;`,
+  );
+  const noise = new Set(["BEGIN", "ROLLBACK", "COMMIT", userId]);
+  return (
+    output
+      .trim()
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !noise.has(line))
+      .at(-1) ?? ""
+  );
+}
+
+describe("supabase row level security", { skip: psqlAvailable() ? false : "local Postgres is not running" }, () => {
+  it("lets a resident read only their own unit and charges", () => {
+    execFileSync("sudo", ["-u", "postgres", "psql", "-d", "postgres", "-c", `drop database if exists ${database}`], {
+      stdio: "ignore",
+    });
+    execFileSync("sudo", ["-u", "postgres", "psql", "-d", "postgres", "-c", `create database ${database}`], {
+      stdio: "ignore",
+    });
+    psql(
+      database,
+      `create extension if not exists pgcrypto;
+do $$ begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon nologin;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+    create role authenticated nologin;
+  end if;
+end $$;
+create schema if not exists auth;
+create table if not exists auth.users (id uuid primary key);
+create or replace function auth.uid() returns uuid language sql stable as $$
+  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+$$;`,
+    );
+    execFileSync(
+      "sudo",
+      [
+        "-u",
+        "postgres",
+        "psql",
+        "-d",
+        database,
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-f",
+        "supabase/migrations/20261102120000_v3_initial.sql",
+      ],
+      { stdio: "pipe" },
+    );
+    psql(database, seedSql());
+
+    assert.equal(asUser(resident.id, "select count(*) from public.units;"), "1");
+    assert.equal(
+      asUser(resident.id, "select id::text from public.units;"),
+      resident.unitId,
+    );
+    assert.equal(
+      asUser(
+        resident.id,
+        `select count(*) from public.units where id <> '${resident.unitId}';`,
+      ),
+      "0",
+    );
+    assert.equal(
+      asUser(
+        resident.id,
+        `select count(*) from public.charges where unit_id <> '${resident.unitId}';`,
+      ),
+      "0",
+    );
+    assert.equal(
+      asUser(resident.id, "select count(*) from public.charges;"),
+      String(seed.charges.filter((charge) => charge.unitId === resident.unitId).length),
+    );
+    assert.equal(asUser(admin.id, "select count(*) from public.units;"), String(seed.units.length));
+    assert.equal(
+      asUser(admin.id, "select count(*) from public.charges;"),
+      String(seed.charges.length),
+    );
+
+    psql(
+      database,
+      `begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '${resident.id}', true);
+do $$
+begin
+  insert into public.charges (hoa_id, unit_id, kind, description, amount_centavos, due_date, status)
+  values ('${admin.hoaId}', '${resident.unitId}', 'special', 'Resident insert', 100, '2026-12-01', 'unpaid');
+  raise exception 'resident insert succeeded';
+exception
+  when insufficient_privilege then
+    null;
+  when others then
+    if sqlerrm = 'resident insert succeeded' then
+      raise;
+    end if;
+    if sqlstate <> '42501' then
+      raise;
+    end if;
+end $$;
+rollback;`,
+    );
+  });
+});

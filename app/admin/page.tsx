@@ -6,6 +6,7 @@ import { Shell } from "@/components/shell";
 import { buttonVariants } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { nameErrorMessage } from "@/lib/form-messages";
 import { describeMonthlyDues, formatCentavos, monthlyDuesCentavos } from "@/lib/money";
 import { cn } from "cn";
@@ -56,6 +57,17 @@ async function AdminHome({
           name, then add each unit as a flat monthly amount or a per-sqm rate
           times its floor area.
         </p>
+        <Link
+          href="/admin/charges"
+          className={cn(
+            buttonVariants({
+              variant: "outline",
+              className: "mt-4 h-12 w-full bg-white text-base",
+            }),
+          )}
+        >
+          Charges
+        </Link>
       </div>
       <section className="rounded-2xl border border-border bg-white p-5">
         <h2 className="font-heading text-lg font-semibold text-ink">
@@ -114,7 +126,7 @@ async function AdminHome({
           Add unit
         </Link>
       </section>
-      <DevRoleSwitch currentUserId={user.id} />
+      {isSupabaseConfigured() ? null : <DevRoleSwitch currentUserId={user.id} />}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 DuesKo is a dues collection app for Philippine homeowners' associations. A resident sees only their own unit. An admin treasurer sees every unit and who has paid. Money is stored as integer centavos and shown as Philippine pesos.
 
-Day 2 is HOA setup and units on the mock repository: a required registered name, and units that are either a flat monthly amount or a per-sqm rate times floor area. Supabase is not connected yet.
+Day 3 adds charges and an optional Supabase path. With no env values, the app stays on the mock repository and the DEV ONLY demo sign-in. When the public Supabase URL and anon key are set, `getRepository()` uses `SupabaseDuesRepository` and sign-in is Supabase Auth email and password.
 
 ## Run locally
 
@@ -25,41 +25,45 @@ Demo sign-in has no password. It is marked **DEV ONLY** and sets a cookie for on
 - `npm run dev` — app at port 43117
 - `npm run build` — production build
 - `npm run lint` — ESLint
-- `npm test` — dues math and mock repository access
+- `npm test` — dues math, mock repository access, and the local Postgres RLS check when `psql` is available
 - `npm run test:e2e` — headless Playwright against the mock repository
 
 ## Environment variables
 
-Supabase is not wired up. When it is, set these names in `.env.local`. Copy `.env.example`. Values stay out of git.
+Copy `.env.example` to `.env.local`. Leave the values empty to use the mock. Fill them to use Supabase. Do not commit values.
 
 | Name | Used by |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Browser and server |
+| `NEXT_PUBLIC_SUPABASE_URL` | Browser and server. Together with the anon key, this switches the app off the mock. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser and server. Row level security still applies. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only. Bypasses row level security. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server only, in `lib/supabase/service.ts`. Bypasses row level security. Never use a `NEXT_PUBLIC_` name for it. |
 
-The dashboard may label the public key "anon public" or "publishable". Put that value in `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Put the service role secret in `SUPABASE_SERVICE_ROLE_KEY`, and never in a `NEXT_PUBLIC_` name.
+The dashboard may label the public key "anon public" or "publishable". Put that value in `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+## Supabase setup
+
+Apply the migration files in this order:
+
+1. `supabase/migrations/20261102120000_v3_initial.sql`
+
+Then:
+
+1. In Authentication, enable the email provider. Create each person with email and password. For a local demo, turn off email confirmation so the password sign-in works immediately.
+2. In the SQL editor, insert the association, its units, and `public.users`. `public.users.id` must be the same id as `auth.users.id`. A resident row needs `unit_id`. The SQL editor runs with rights that bypass row level security, which is required for the first association because authenticated clients cannot insert `hoas`.
+3. Put the three names above in `.env.local` and restart the app. Demo sign-in is not shown. Sign in with the email and password.
+
+`lib/supabase/service.ts` can build a service-role client for server-side maintenance. Pages and client components do not import it. PayMongo keys are not part of this step.
 
 ## Data layer
 
-`DuesRepository` in `lib/repository.ts` is the seam. `getRepository()` in `lib/get-repository.ts` returns an in-memory repository over `lib/mock/seed.json`. A resident id returns only that resident's unit. An admin treasurer id returns every unit in the HOA, and can save the registered name and add or edit units. There are no Supabase keys in this step.
+`DuesRepository` in `lib/repository.ts` is the seam. `getRepository()` returns an in-memory repository over `lib/mock/seed.json`, or `SupabaseDuesRepository` when the public env vars are set. A resident id returns only that resident's unit and charges. An admin treasurer id returns every unit in the HOA, and can save the registered name, edit units, create monthly dues for every unit, and create a special assessment for every unit or a chosen subset. Amounts are integer centavos.
 
-The SQL for the same rules is `supabase/migrations/20261102120000_v3_initial.sql`. Tables: `hoas` (`registered_name`), `units` (flat or per-sqm rate), `users` (`admin_treasurer` or `resident`), `charges` (dues and special assessments), `payments` (PayMongo or manual cash, optional `hoa_reference_no`), and `payment_links`. Amounts are integer centavos. `users.id` references `auth.users`.
-
-## What the owner needs before Supabase can replace the mock
-
-1. A Supabase project (the free project is enough for the demo).
-2. The three values named above, sent securely. Do not paste them into the README, a commit, or a chat that gets archived.
-3. Apply `supabase/migrations/20261102120000_v3_initial.sql` in the SQL editor, or with the Supabase CLI against that project. The SQL editor runs as a role that bypasses row level security, so it can insert the first `hoas` row. Authenticated clients can update an HOA they already belong to, and the policies do not let them insert one.
-4. Confirm row level security is enabled on `hoas`, `units`, `users`, `charges`, `payments`, and `payment_links`. A resident select returns only their unit's rows. An admin treasurer select returns every unit and the `who_has_paid` view.
-
-After that, the next code change replaces `getRepository()` with a Supabase implementation of `DuesRepository` and replaces the DEV ONLY cookie with Supabase Auth. `public.users.id` must be the same id as `auth.users.id`. PayMongo keys are not required for this switch. They are required later, when checkout is added.
+The SQL for the same rules is `supabase/migrations/20261102120000_v3_initial.sql`. Tables: `hoas` (`registered_name`), `units` (flat or per-sqm rate), `users` (`admin_treasurer` or `resident`), `charges` (dues and special assessments, unpaid or paid), `payments` (PayMongo or manual cash, optional `hoa_reference_no`), and `payment_links`. `users.id` references `auth.users`.
 
 ## Next steps
 
 Later days:
 
-- Monthly dues and one-off special assessments
 - PayMongo checkout with the HOA's own test keys, and an idempotent webhook
 - Manual cash with the optional HOA reference number, and the payment acknowledgment label
 - Who-has-paid for the admin treasurer, the resident account, and a shareable pay link

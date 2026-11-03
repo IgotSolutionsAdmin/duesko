@@ -1,5 +1,12 @@
-import type { DuesRepository, Failure, Result } from "../repository";
-import type { AppUser, SeedData, Unit, UnitDraft } from "../types";
+import { duesDescription, monthlyAmountCentavos, parseDueDate, parsePeriod } from "../charges";
+import type {
+  DuesRepository,
+  Failure,
+  MonthlyDuesInput,
+  Result,
+  SpecialAssessmentInput,
+} from "../repository";
+import type { AppUser, Charge, SeedData, Unit, UnitDraft } from "../types";
 
 function copy<T extends object>(value: T): T {
   return { ...value };
@@ -75,6 +82,98 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
         rateCentavos: draft.rateCentavos,
         areaSqm: draft.areaSqm,
       },
+    };
+  }
+
+  function monthlyDrafts(
+    hoaId: string,
+    input: MonthlyDuesInput,
+  ): Result<Charge[]> {
+    const period = parsePeriod(input.period);
+    if (!period.ok) return period;
+    const dueDate = parseDueDate(input.dueDate);
+    if (!dueDate.ok) return dueDate;
+    const typed = input.description.trim().replace(/\s+/g, " ");
+    if (typed.length > 200) {
+      return { ok: false, message: "Description is too long." };
+    }
+    const description = typed || duesDescription(period.value);
+    const units = data.units.filter((unit) => unit.hoaId === hoaId);
+    const already = new Set(
+      data.charges
+        .filter(
+          (charge) =>
+            charge.kind === "dues" &&
+            charge.period === period.value &&
+            charge.hoaId === hoaId,
+        )
+        .map((charge) => charge.unitId),
+    );
+    const missing = units.filter((unit) => !already.has(unit.id));
+    if (missing.length === 0) {
+      return {
+        ok: false,
+        message: "Monthly dues for that period already exist.",
+      };
+    }
+    return {
+      ok: true,
+      value: missing.map((unit) => ({
+        id: crypto.randomUUID(),
+        hoaId,
+        unitId: unit.id,
+        kind: "dues" as const,
+        description,
+        period: period.value,
+        amountCentavos: monthlyAmountCentavos(unit),
+        dueDate: dueDate.value,
+        status: "unpaid" as const,
+      })),
+    };
+  }
+
+  function specialDrafts(
+    hoaId: string,
+    input: SpecialAssessmentInput,
+  ): Result<Charge[]> {
+    const description = input.description.trim().replace(/\s+/g, " ");
+    if (!description) {
+      return { ok: false, message: "Description is required." };
+    }
+    if (description.length > 200) {
+      return { ok: false, message: "Description is too long." };
+    }
+    const dueDate = parseDueDate(input.dueDate);
+    if (!dueDate.ok) return dueDate;
+    if (!Number.isSafeInteger(input.amountCentavos) || input.amountCentavos <= 0) {
+      return {
+        ok: false,
+        message: "Enter the amount in pesos, such as 500.00.",
+      };
+    }
+    const allowed = new Set(
+      data.units.filter((unit) => unit.hoaId === hoaId).map((unit) => unit.id),
+    );
+    const uniqueIds = [...new Set(input.unitIds)];
+    if (uniqueIds.length === 0) {
+      return { ok: false, message: "Choose at least one unit." };
+    }
+    if (uniqueIds.some((id) => !allowed.has(id))) {
+      return { ok: false, message: "Choose a unit in this association." };
+    }
+    return {
+      ok: true,
+      value: uniqueIds.map((unitId) => ({
+        id: crypto.randomUUID(),
+        hoaId,
+        unitId,
+        kind: "special" as const,
+        description,
+        period: null,
+        amountCentavos: input.amountCentavos,
+        dueDate: dueDate.value,
+        status: "unpaid" as const,
+      })),
     };
   }
 
@@ -164,6 +263,30 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
       unit.rateCentavos = normalized.value.rateCentavos;
       unit.areaSqm = normalized.value.areaSqm;
       return { ok: true, value: copy(unit) };
+    },
+
+    async createMonthlyDues(userId, input) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const drafted = monthlyDrafts(admin.hoaId, input);
+      if (!drafted.ok) return drafted;
+      const created = drafted.value.map((charge) => {
+        data.charges.push(charge);
+        return copy(charge);
+      });
+      return { ok: true, value: created };
+    },
+
+    async createSpecialAssessment(userId, input) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const drafted = specialDrafts(admin.hoaId, input);
+      if (!drafted.ok) return drafted;
+      const created = drafted.value.map((charge) => {
+        data.charges.push(charge);
+        return copy(charge);
+      });
+      return { ok: true, value: created };
     },
 
     async listCharges(userId) {

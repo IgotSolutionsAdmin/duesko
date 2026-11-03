@@ -1,9 +1,11 @@
 import { Suspense } from "react";
+import { ChargeList } from "@/components/charge-list";
 import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { Shell } from "@/components/shell";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
 import { describeMonthlyDues } from "@/lib/money";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const metadata = {
   title: "Your account",
@@ -24,9 +26,10 @@ export default function ResidentPage() {
 async function ResidentHome() {
   const user = await requireRole("resident");
   const repository = getRepository();
-  const [hoa, units] = await Promise.all([
+  const [hoa, units, charges] = await Promise.all([
     repository.getHoa(user.id),
     repository.listUnits(user.id),
+    repository.listCharges(user.id),
   ]);
 
   const intro = hoa
@@ -42,9 +45,8 @@ async function ResidentHome() {
           {user.fullName}
         </h1>
         <p className="mt-3 text-base leading-7 text-ink/80">
-          {introSentence} This screen is a placeholder. Charges and the pay
-          link come later. This page lists only the unit linked to the
-          signed-in resident.
+          {introSentence} This page lists only the unit and charges linked to
+          the signed-in resident.
         </p>
       </div>
       {units.length === 0 ? (
@@ -74,7 +76,13 @@ async function ResidentHome() {
           ))}
         </div>
       )}
-      <DevRoleSwitch currentUserId={user.id} />
+      <ChargeList
+        charges={charges}
+        units={units}
+        showUnit={false}
+        label="Your charges"
+      />
+      {isSupabaseConfigured() ? null : <DevRoleSwitch currentUserId={user.id} />}
     </div>
   );
 }
