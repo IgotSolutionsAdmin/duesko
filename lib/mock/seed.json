@@ -1,0 +1,121 @@
+{
+  "hoas": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "registeredName": "Villa Esperanza Homeowners Association, Inc."
+    }
+  ],
+  "units": [
+    {
+      "id": "22222222-2222-4222-8222-222222222201",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "label": "Blk 1 Lot 4",
+      "areaSqm": null,
+      "rateType": "flat",
+      "rateCentavos": 150000
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222202",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "label": "Blk 1 Lot 5",
+      "areaSqm": null,
+      "rateType": "flat",
+      "rateCentavos": 150000
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222203",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "label": "Blk 2 Lot 1",
+      "areaSqm": 48,
+      "rateType": "per_sqm",
+      "rateCentavos": 3500
+    }
+  ],
+  "users": [
+    {
+      "id": "33333333-3333-4333-8333-333333333301",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "unitId": null,
+      "email": "ana.reyes@villa-esperanza.demo",
+      "fullName": "Ana Reyes",
+      "role": "admin_treasurer"
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333302",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "unitId": "22222222-2222-4222-8222-222222222201",
+      "email": "juan.delacruz@villa-esperanza.demo",
+      "fullName": "Juan dela Cruz",
+      "role": "resident"
+    }
+  ],
+  "charges": [
+    {
+      "id": "44444444-4444-4444-8444-444444444401",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "unitId": "22222222-2222-4222-8222-222222222201",
+      "kind": "dues",
+      "description": "November 2026 dues",
+      "period": "2026-11",
+      "amountCentavos": 150000,
+      "dueDate": "2026-11-05",
+      "status": "unpaid"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444402",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "unitId": "22222222-2222-4222-8222-222222222201",
+      "kind": "special",
+      "description": "Gate repair special assessment",
+      "period": null,
+      "amountCentavos": 50000,
+      "dueDate": "2026-11-20",
+      "status": "unpaid"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444403",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "unitId": "22222222-2222-4222-8222-222222222202",
+      "kind": "dues",
+      "description": "November 2026 dues",
+      "period": "2026-11",
+      "amountCentavos": 150000,
+      "dueDate": "2026-11-05",
+      "status": "paid"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444404",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "unitId": "22222222-2222-4222-8222-222222222203",
+      "kind": "dues",
+      "description": "November 2026 dues",
+      "period": "2026-11",
+      "amountCentavos": 168000,
+      "dueDate": "2026-11-05",
+      "status": "unpaid"
+    }
+  ],
+  "payments": [
+    {
+      "id": "55555555-5555-4555-8555-555555555501",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "chargeId": "44444444-4444-4444-8444-444444444403",
+      "unitId": "22222222-2222-4222-8222-222222222202",
+      "method": "cash",
+      "amountCentavos": 150000,
+      "paidAt": "2026-11-02T02:15:00.000Z",
+      "providerPaymentId": null,
+      "hoaReferenceNo": "CR-2026-014",
+      "recordedBy": "33333333-3333-4333-8333-333333333301"
+    }
+  ],
+  "paymentLinks": [
+    {
+      "id": "66666666-6666-4666-8666-666666666601",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "chargeId": "44444444-4444-4444-8444-444444444401",
+      "unitId": "22222222-2222-4222-8222-222222222201",
+      "token": "ve-b1l4-2026-11"
+    }
+  ]
+}
