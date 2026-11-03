@@ -21,7 +21,7 @@ async function ResidentFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-mist text-ink lg:flex">
       <ResidentNav />
-      <main className="portal-main mx-auto flex w-full max-w-lg flex-col px-5 pt-6 lg:max-w-none lg:flex-1 lg:px-10 lg:pt-8">
+      <main className="portal-main mx-auto flex min-h-dvh w-full max-w-lg flex-1 flex-col px-5 pt-6 lg:min-h-0 lg:max-w-none lg:px-10 lg:pt-8">
         {children}
         <div data-testid="page-end" aria-hidden className="h-px w-full shrink-0" />
       </main>

@@ -61,6 +61,11 @@ for (const viewport of [
       await expect(page.getByRole("heading", { name: "Upload proof of payment" })).toBeVisible();
       await expectLastAboveNav(page);
 
+      await page.getByRole("button", { name: "Upload proof of payment" }).click();
+      await expect(page.getByText("Enter the amount in pesos, such as 1500.00.")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Payment history" })).toBeVisible();
+      await expectLastAboveNav(page);
+
       await page.getByRole("link", { name: "Re-upload" }).first().click();
       await expect(page.getByTestId("reupload-banner")).toBeVisible();
       await expectLastAboveNav(page);

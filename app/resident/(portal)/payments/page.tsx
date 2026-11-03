@@ -47,9 +47,10 @@ async function ResidentPayments({
     query.reupload === "1" && query.charge
       ? open.find((charge) => charge.id === query.charge)
       : undefined;
+  const activeReuploadChargeId = query.reupload === "1" ? query.charge : undefined;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-h-0 flex-1 flex-col gap-5">
       <header className="flex items-center gap-3">
         <Link href="/resident" className="text-2xl text-teal-deep" aria-label="Back">
           ‹
@@ -85,7 +86,13 @@ async function ResidentPayments({
                   <div>
                     <p className="font-medium">{methodLabel(payment.method)}</p>
                     <p className="text-sm text-ink/60">{formatShortDay(payment.paidAt)}</p>
-                    {canReupload(payment) ? (
+                    {payment.status === "rejected" && payment.rejectionReason ? (
+                      <p className="mt-2 text-sm text-destructive">
+                        Rejected: {payment.rejectionReason}
+                      </p>
+                    ) : null}
+                    {canReupload(payment) &&
+                    payment.chargeId !== activeReuploadChargeId ? (
                       <Link
                         href={`/resident/payments?charge=${payment.chargeId}&reupload=1`}
                         className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-teal-deep"
@@ -99,9 +106,6 @@ async function ResidentPayments({
                     <p className="mt-1 text-sm">{formatCentavos(payment.amountCentavos)}</p>
                   </div>
                 </div>
-                {payment.status === "rejected" && payment.rejectionReason ? (
-                  <p className="mt-2 w-full text-sm text-destructive">{payment.rejectionReason}</p>
-                ) : null}
               </li>
             ))}
           </ul>

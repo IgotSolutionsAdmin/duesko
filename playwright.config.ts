@@ -20,12 +20,17 @@ export default defineConfig({
         "**/test-site-off.spec.ts",
         "**/day6-screens.spec.ts",
         "**/uma-review-3-screens.spec.ts",
+        "**/uma-review-4-screens.spec.ts",
       ],
       use: { baseURL: "http://127.0.0.1:43117" },
     },
     {
       name: "screens",
-      testMatch: ["**/day6-screens.spec.ts", "**/uma-review-3-screens.spec.ts"],
+      testMatch: [
+        "**/day6-screens.spec.ts",
+        "**/uma-review-3-screens.spec.ts",
+        "**/uma-review-4-screens.spec.ts",
+      ],
       use: { baseURL: "http://127.0.0.1:43119" },
     },
     {
