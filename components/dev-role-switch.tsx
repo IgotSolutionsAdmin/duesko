@@ -3,7 +3,13 @@ import { signInAsDemo, signOut } from "@/lib/demo-auth-actions";
 import { seed } from "@/lib/mock/seed";
 import { roleLabel } from "@/lib/roles";
 
-export function DevRoleSwitch({ currentUserId }: { currentUserId: string }) {
+export function DevRoleSwitch({
+  currentUserId,
+  portal,
+}: {
+  currentUserId: string;
+  portal: "admin" | "resident";
+}) {
   const others = seed.users.filter((user) => user.id !== currentUserId);
 
   return (
@@ -29,6 +35,7 @@ export function DevRoleSwitch({ currentUserId }: { currentUserId: string }) {
           </form>
         ))}
         <form action={signOut}>
+          <input type="hidden" name="portal" value={portal} />
           <Button type="submit" variant="ghost" className="h-11 w-full text-base">
             Sign out
           </Button>

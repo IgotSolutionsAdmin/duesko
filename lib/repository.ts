@@ -7,6 +7,7 @@ import type {
   Unit,
   UnitDraft,
 } from "./types";
+import type { ManualDraft, ProofDraft } from "./payments";
 
 export interface MonthlyDuesInput {
   period: string;
@@ -57,6 +58,16 @@ export interface DuesRepository {
     input: SpecialAssessmentInput,
   ): Promise<Result<Charge[]>>;
   listCharges(userId: string): Promise<Charge[]>;
+  submitProof(userId: string, input: ProofDraft): Promise<Result<Payment>>;
+  approvePayment(userId: string, paymentId: string): Promise<Result<Payment>>;
+  rejectPayment(
+    userId: string,
+    paymentId: string,
+    reason: string,
+  ): Promise<Result<Payment>>;
+  recordManualPayment(userId: string, input: ManualDraft): Promise<Result<Payment>>;
+  /** Short-lived URL. Callers must already be allowed to see the payment. */
+  getProofUrl(userId: string, paymentId: string): Promise<Result<string>>;
   listPayments(userId: string): Promise<Payment[]>;
   listPaymentLinks(userId: string): Promise<PaymentLink[]>;
   listUsers(userId: string): Promise<AppUser[]>;

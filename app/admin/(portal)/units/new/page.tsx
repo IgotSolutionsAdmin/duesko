@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Shell } from "@/components/shell";
 import { UnitForm } from "@/components/unit-form";
 import { requireRole } from "@/lib/auth";
 import { unitErrorMessage } from "@/lib/form-messages";
@@ -15,13 +14,11 @@ export default function NewUnitPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   return (
-    <Shell>
-      <Suspense
-        fallback={<p className="text-sm text-ink/70">Checking the demo session…</p>}
-      >
-        <NewUnit searchParams={searchParams} />
-      </Suspense>
-    </Shell>
+    <Suspense
+      fallback={<p className="text-sm text-ink/70">Checking the demo session…</p>}
+    >
+      <NewUnit searchParams={searchParams} />
+    </Suspense>
   );
 }
 

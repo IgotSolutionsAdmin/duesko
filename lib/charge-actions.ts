@@ -9,7 +9,19 @@ import { getRepository } from "./get-repository";
 
 function fail(kind: "dues" | "special", message: string): never {
   const key = kind === "dues" ? "dues" : "special";
-  redirect(`/admin/charges?${key}=${chargeErrorCode(message)}`);
+  redirect(`/admin/charges/new?${key}=${chargeErrorCode(message)}`);
+}
+
+export async function createCharge(formData: FormData) {
+  if (formData.get("kind") === "special") {
+    await createSpecialAssessment(formData);
+    return;
+  }
+  const monthly = new FormData();
+  monthly.set("period", String(formData.get("period") ?? ""));
+  monthly.set("dueDate", String(formData.get("monthlyDue") ?? ""));
+  monthly.set("description", String(formData.get("monthlyDescription") ?? ""));
+  await createMonthlyDues(monthly);
 }
 
 export async function createMonthlyDues(formData: FormData) {

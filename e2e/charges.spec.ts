@@ -10,17 +10,18 @@ test.beforeEach(async ({ request }) => {
 });
 
 async function signIn(page: Page, name: string) {
-  await page.goto("/sign-in");
+  const portal = name === "Ana Reyes" ? "/admin/login" : "/resident/login";
+  await page.goto(portal);
   await page.getByRole("button", { name: `Sign in as ${name}` }).click();
 }
 
 test("create monthly dues for every unit", async ({ page }) => {
   await signIn(page, "Ana Reyes");
   await page.getByRole("link", { name: "Charges" }).click();
-  const monthly = page.getByRole("region", { name: "Monthly dues" });
-  await field(monthly, "Period").fill("2026-12");
-  await field(monthly, "Due date").fill("2026-12-05");
-  await monthly.getByRole("button", { name: "Create monthly dues" }).click();
+  await page.getByRole("link", { name: "Create charge" }).filter({ visible: true }).click();
+  await field(page, "Period").fill("2026-12");
+  await field(page, "Due date").fill("2026-12-05");
+  await page.getByRole("button", { name: "Create charge" }).click();
 
   const list = page.getByRole("region", { name: "Charge list" });
   await expect(list.getByRole("heading", { name: "December 2026 dues" })).toHaveCount(3);
@@ -35,13 +36,14 @@ test("create monthly dues for every unit", async ({ page }) => {
 test("create a special assessment for a selected unit", async ({ page }) => {
   await signIn(page, "Ana Reyes");
   await page.getByRole("link", { name: "Charges" }).click();
-  const special = page.getByRole("region", { name: "Special assessment" });
-  await field(special, "Description").fill("Christmas lights");
-  await field(special, "Amount (PHP)").fill("500");
-  await field(special, "Due date").fill("2026-12-20");
-  await special.getByLabel("Selected units").check();
-  await special.getByLabel("Blk 1 Lot 5").check();
-  await special.getByRole("button", { name: "Create special assessment" }).click();
+  await page.getByRole("link", { name: "Create charge" }).filter({ visible: true }).click();
+  await page.getByLabel("Special assessment").check();
+  await field(page, "Charge name").fill("Christmas lights");
+  await field(page, "Amount per unit").fill("500");
+  await field(page, "Due date").fill("2026-12-20");
+  await page.getByLabel("Selected units").check();
+  await page.getByLabel("Blk 1 Lot 5").check();
+  await page.getByRole("button", { name: "Create charge" }).click();
 
   const list = page.getByRole("region", { name: "Charge list" });
   await expect(list.getByRole("heading", { name: "Christmas lights" })).toHaveCount(1);
@@ -54,23 +56,24 @@ test("create a special assessment for a selected unit", async ({ page }) => {
 test("resident sees only their own charges", async ({ page }) => {
   await signIn(page, "Ana Reyes");
   await page.getByRole("link", { name: "Charges" }).click();
-  const monthly = page.getByRole("region", { name: "Monthly dues" });
-  await field(monthly, "Period").fill("2026-12");
-  await field(monthly, "Due date").fill("2026-12-05");
-  await monthly.getByRole("button", { name: "Create monthly dues" }).click();
+  await page.getByRole("link", { name: "Create charge" }).filter({ visible: true }).click();
+  await field(page, "Period").fill("2026-12");
+  await field(page, "Due date").fill("2026-12-05");
+  await page.getByRole("button", { name: "Create charge" }).click();
 
-  const special = page.getByRole("region", { name: "Special assessment" });
-  await field(special, "Description").fill("Christmas lights");
-  await field(special, "Amount (PHP)").fill("500");
-  await field(special, "Due date").fill("2026-12-20");
-  await special.getByLabel("Selected units").check();
-  await special.getByLabel("Blk 1 Lot 5").check();
-  await special.getByRole("button", { name: "Create special assessment" }).click();
+  await page.getByRole("link", { name: "Create charge" }).filter({ visible: true }).click();
+  await page.getByLabel("Special assessment").check();
+  await field(page, "Charge name").fill("Christmas lights");
+  await field(page, "Amount per unit").fill("500");
+  await field(page, "Due date").fill("2026-12-20");
+  await page.getByLabel("Selected units").check();
+  await page.getByLabel("Blk 1 Lot 5").check();
+  await page.getByRole("button", { name: "Create charge" }).click();
 
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await page.getByRole("button", { name: "Sign in as Juan dela Cruz" }).click();
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Switch to Juan dela Cruz, resident" }).click();
 
-  const yours = page.getByRole("region", { name: "Your charges" });
+  const yours = page.getByRole("region", { name: "My dues and payments" });
   await expect(yours.getByRole("heading", { name: "December 2026 dues" })).toHaveCount(1);
   await expect(yours.locator("p", { hasText: "₱1,500.00" })).toHaveCount(2);
   await expect(yours.getByRole("heading", { name: "November 2026 dues" })).toHaveCount(1);

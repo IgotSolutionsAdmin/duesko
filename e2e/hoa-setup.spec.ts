@@ -10,20 +10,17 @@ test.beforeEach(async ({ request }) => {
 });
 
 test("demo sign-in as admin", async ({ page }) => {
-  await page.goto("/sign-in");
+  await page.goto("/admin/login");
   await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Villa Esperanza Homeowners Association, Inc.",
-  );
-  await expect(
-    page.getByText("Signed in as Ana Reyes, admin treasurer."),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Ana");
+  await expect(page.getByText("Villa Esperanza Homeowners Association, Inc.")).toBeVisible();
 });
 
 test("HOA setup requires a registered name", async ({ page }) => {
-  await page.goto("/sign-in");
+  await page.goto("/admin/login");
   await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
+  await page.getByRole("link", { name: "More" }).click();
   const name = field(page, "Registered name");
 
   await name.fill("");
@@ -50,8 +47,9 @@ test("HOA setup requires a registered name", async ({ page }) => {
 });
 
 test("add and edit a flat unit and a per-sqm unit", async ({ page }) => {
-  await page.goto("/sign-in");
+  await page.goto("/admin/login");
   await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
+  await page.getByRole("link", { name: "Units" }).click();
 
   await page.getByRole("link", { name: "Add unit" }).click();
   await field(page, "Unit label").fill("Blk 3 Lot 2");
@@ -88,8 +86,9 @@ test("add and edit a flat unit and a per-sqm unit", async ({ page }) => {
 });
 
 test("resident sees only their own unit", async ({ page }) => {
-  await page.goto("/sign-in");
+  await page.goto("/admin/login");
   await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
+  await page.getByRole("link", { name: "Units" }).click();
   await page.getByRole("link", { name: "Add unit" }).click();
   await field(page, "Unit label").fill("Blk 9 Lot 9");
   await field(page, "Flat monthly amount").check();
@@ -97,8 +96,8 @@ test("resident sees only their own unit", async ({ page }) => {
   await page.getByRole("button", { name: "Add unit" }).click();
   await expect(page.getByRole("heading", { name: "Blk 9 Lot 9" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await page.getByRole("button", { name: "Sign in as Juan dela Cruz" }).click();
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Switch to Juan dela Cruz, resident" }).click();
   await expect(page).toHaveURL(/\/resident$/);
   await expect(page.getByRole("heading", { name: "Blk 1 Lot 4" })).toBeVisible();
   await expect(

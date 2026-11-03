@@ -159,3 +159,14 @@ form:has(input[name="scope"][value="selected"]:checked) .special-units {
   display: flex;
   flex-direction: column;
 }
+
+.kind-monthly,
+.kind-special {
+  display: none;
+}
+
+form:has(input[name="kind"][value="monthly"]:checked) .kind-monthly,
+form:has(input[name="kind"][value="special"]:checked) .kind-special {
+  display: flex;
+  flex-direction: column;
+}

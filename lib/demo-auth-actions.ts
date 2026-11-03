@@ -69,7 +69,7 @@ export async function signInWithPassword(formData: FormData) {
   redirect(user ? homePath(user.role) : "/sign-in?auth=profile");
 }
 
-export async function signOut() {
+export async function signOut(formData?: FormData) {
   const jar = await cookies();
   const accessToken = jar.get(SUPABASE_ACCESS_COOKIE)?.value;
   const refreshToken = jar.get(SUPABASE_REFRESH_COOKIE)?.value;
@@ -81,8 +81,12 @@ export async function signOut() {
     });
     await supabase.auth.signOut();
   }
-  jar.delete(DEMO_COOKIE);
-  jar.delete(SUPABASE_ACCESS_COOKIE);
-  jar.delete(SUPABASE_REFRESH_COOKIE);
-  redirect("/sign-in");
+  const expired = { ...cookieOptions, maxAge: 0 };
+  jar.set(DEMO_COOKIE, "", expired);
+  jar.set(SUPABASE_ACCESS_COOKIE, "", expired);
+  jar.set(SUPABASE_REFRESH_COOKIE, "", expired);
+  const portal = formData?.get("portal");
+  if (portal === "resident") redirect("/resident/login");
+  if (portal === "admin") redirect("/admin/login");
+  redirect("/");
 }

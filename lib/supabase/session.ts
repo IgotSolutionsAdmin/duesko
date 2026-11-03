@@ -1,10 +1,10 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createAuthClient, createDataClient } from "./client";
+import { SUPABASE_ACCESS_COOKIE, SUPABASE_REFRESH_COOKIE } from "./cookie-names";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const SUPABASE_ACCESS_COOKIE = "duesko_supabase_access";
-export const SUPABASE_REFRESH_COOKIE = "duesko_supabase_refresh";
+export { SUPABASE_ACCESS_COOKIE, SUPABASE_REFRESH_COOKIE };
 
 export const supabaseCookieOptions = {
   httpOnly: true,

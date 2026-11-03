@@ -62,7 +62,13 @@ function seedSql(): string {
         `insert into public.charges (id, hoa_id, unit_id, kind, description, period, amount_centavos, due_date, status) values ('${charge.id}', '${charge.hoaId}', '${charge.unitId}', '${charge.kind}', ${sqlText(charge.description)}, ${charge.period ? sqlText(charge.period) : "null"}, ${charge.amountCentavos}, '${charge.dueDate}', '${charge.status}');`,
     )
     .join("\n");
-  return [authUsers, hoas, units, users, charges].join("\n");
+  const payments = seed.payments
+    .map(
+      (payment) =>
+        `insert into public.payments (id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, hoa_reference_no, recorded_by, status, reviewed_by, reviewed_at) values ('${payment.id}', '${payment.hoaId}', '${payment.chargeId}', '${payment.unitId}', '${payment.method}', ${payment.amountCentavos}, '${payment.paidAt}', ${payment.hoaReferenceNo ? sqlText(payment.hoaReferenceNo) : "null"}, '${payment.recordedBy}', '${payment.status}', '${payment.reviewedBy}', '${payment.reviewedAt}');`,
+    )
+    .join("\n");
+  return [authUsers, hoas, units, users, charges, payments].join("\n");
 }
 
 function asUser(userId: string, statement: string): string {
@@ -110,21 +116,34 @@ create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
 $$;`,
     );
-    execFileSync(
-      "sudo",
-      [
-        "-u",
-        "postgres",
-        "psql",
-        "-d",
-        database,
-        "-v",
-        "ON_ERROR_STOP=1",
-        "-f",
-        "supabase/migrations/20261102120000_v3_initial.sql",
-      ],
-      { stdio: "pipe" },
+    psql(
+      database,
+      `create schema if not exists storage;
+create table if not exists storage.buckets (
+  id text primary key,
+  name text not null,
+  public boolean not null default false,
+  file_size_limit bigint,
+  allowed_mime_types text[]
+);
+create table if not exists storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text not null references storage.buckets (id),
+  name text not null,
+  owner uuid,
+  created_at timestamptz not null default now()
+);`,
     );
+    for (const file of [
+      "supabase/migrations/20261102120000_v3_initial.sql",
+      "supabase/migrations/20261103120000_payment_proofs.sql",
+    ]) {
+      execFileSync(
+        "sudo",
+        ["-u", "postgres", "psql", "-d", database, "-v", "ON_ERROR_STOP=1", "-f", file],
+        { stdio: "pipe" },
+      );
+    }
     psql(database, seedSql());
 
     assert.equal(asUser(resident.id, "select count(*) from public.units;"), "1");
@@ -178,6 +197,83 @@ exception
     end if;
 end $$;
 rollback;`,
+    );
+
+    assert.equal(asUser(resident.id, "select count(*) from public.payments;"), "0");
+    assert.equal(asUser(admin.id, "select count(*) from public.payments;"), "1");
+
+    const ownCharge = seed.charges.find((charge) => charge.unitId === resident.unitId);
+    const otherCharge = seed.charges.find((charge) => charge.unitId !== resident.unitId);
+    if (!ownCharge || !otherCharge) throw new Error("Seed charges missing");
+    const ownPath = `${admin.hoaId}/${ownCharge.id}/own.png`;
+    const otherPath = `${admin.hoaId}/${otherCharge.id}/other.png`;
+
+    psql(
+      database,
+      `begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '${resident.id}', true);
+insert into public.payments (
+  hoa_id, charge_id, unit_id, method, amount_centavos, paid_at,
+  status, reference_no, proof_path, recorded_by
+) values (
+  '${admin.hoaId}', '${ownCharge.id}', '${resident.unitId}', 'gcash', 150000, now(),
+  'pending', 'GC-1', '${ownPath}', '${resident.id}'
+);
+insert into storage.objects (bucket_id, name)
+values ('payment-proofs', '${ownPath}');
+rollback;`,
+    );
+
+    psql(
+      database,
+      `begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '${resident.id}', true);
+do $$
+begin
+  insert into public.payments (
+    hoa_id, charge_id, unit_id, method, amount_centavos, paid_at,
+    status, reference_no, proof_path, recorded_by
+  ) values (
+    '${admin.hoaId}', '${otherCharge.id}', '${otherCharge.unitId}', 'gcash', 100, now(),
+    'pending', 'NO', '${otherPath}', '${resident.id}'
+  );
+  raise exception 'cross-unit payment insert succeeded';
+exception
+  when insufficient_privilege then null;
+  when others then
+    if sqlerrm = 'cross-unit payment insert succeeded' then raise; end if;
+    if sqlstate <> '42501' then raise; end if;
+end $$;
+do $$
+begin
+  insert into storage.objects (bucket_id, name)
+  values ('payment-proofs', '${otherPath}');
+  raise exception 'cross-unit proof insert succeeded';
+exception
+  when insufficient_privilege then null;
+  when others then
+    if sqlerrm = 'cross-unit proof insert succeeded' then raise; end if;
+    if sqlstate <> '42501' then raise; end if;
+end $$;
+rollback;`,
+    );
+
+    psql(
+      database,
+      `insert into storage.objects (bucket_id, name) values ('payment-proofs', '${otherPath}');`,
+    );
+    assert.equal(
+      asUser(
+        resident.id,
+        `select count(*) from storage.objects where name = '${otherPath}';`,
+      ),
+      "0",
+    );
+    assert.equal(
+      asUser(admin.id, "select count(*) from storage.objects;"),
+      "1",
     );
   });
 });

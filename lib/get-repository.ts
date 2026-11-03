@@ -5,6 +5,7 @@ import type { DuesRepository, Failure } from "./repository";
 import { isSupabaseConfigured } from "./supabase/env";
 import { createSupabaseRepository } from "./supabase/repository";
 import { openDataClient } from "./supabase/session";
+import { resetProofTokens } from "./mock/proof-tokens";
 import type { SeedData } from "./types";
 
 type Store = { repository: DuesRepository };
@@ -88,6 +89,31 @@ function createRequestRepository(): DuesRepository {
       if (!repository) return [];
       return repository.listCharges(userId);
     },
+    async submitProof(userId, input) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.submitProof(userId, input);
+    },
+    async approvePayment(userId, paymentId) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.approvePayment(userId, paymentId);
+    },
+    async rejectPayment(userId, paymentId, reason) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.rejectPayment(userId, paymentId, reason);
+    },
+    async recordManualPayment(userId, input) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.recordManualPayment(userId, input);
+    },
+    async getProofUrl(userId, paymentId) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.getProofUrl(userId, paymentId);
+    },
     async listPayments(userId) {
       const repository = await live();
       if (!repository) return [];
@@ -108,5 +134,6 @@ function createRequestRepository(): DuesRepository {
 
 /** Restores the in-memory mock to the JSON seed. Dev and e2e only. */
 export function resetRepository(): void {
+  resetProofTokens();
   globalStore.__dueskoStore = openStore();
 }

@@ -6,7 +6,9 @@ export type ChargeKind = "dues" | "special";
 
 export type ChargeStatus = "unpaid" | "paid";
 
-export type PaymentMethod = "paymongo" | "cash";
+export type PaymentMethod = "cash" | "gcash" | "bank_transfer" | "other";
+
+export type PaymentStatus = "pending" | "approved" | "rejected";
 
 export interface Hoa {
   id: string;
@@ -60,8 +62,16 @@ export interface Payment {
   method: PaymentMethod;
   amountCentavos: number;
   paidAt: string;
+  /** Unused. Online checkout is out of scope. */
   providerPaymentId: string | null;
+  referenceNo: string | null;
   hoaReferenceNo: string | null;
+  proofPath: string | null;
+  status: PaymentStatus;
+  rejectionReason: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  note: string | null;
   recordedBy: string | null;
 }
 

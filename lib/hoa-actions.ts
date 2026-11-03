@@ -11,14 +11,15 @@ import { parseUnitForm } from "./unit-form";
 export async function saveRegisteredName(formData: FormData) {
   const user = await requireRole("admin_treasurer");
   const parsed = parseRegisteredName(String(formData.get("registeredName") ?? ""));
-  if (!parsed.ok) redirect(`/admin?name=${nameErrorCode(parsed.message)}`);
+  if (!parsed.ok) redirect(`/admin/more?name=${nameErrorCode(parsed.message)}`);
 
   const result = await getRepository().updateRegisteredName(user.id, parsed.value);
-  if (!result.ok) redirect(`/admin?name=${nameErrorCode(result.message)}`);
+  if (!result.ok) redirect(`/admin/more?name=${nameErrorCode(result.message)}`);
 
   revalidatePath("/admin");
+  revalidatePath("/admin/more");
   revalidatePath("/resident");
-  redirect("/admin");
+  redirect("/admin/more");
 }
 
 export async function saveUnit(formData: FormData) {
@@ -37,6 +38,7 @@ export async function saveUnit(formData: FormData) {
   if (!result.ok) redirect(`${back}?error=${unitErrorCode(result.message)}`);
 
   revalidatePath("/admin");
+  revalidatePath("/admin/units");
   revalidatePath("/resident");
-  redirect("/admin");
+  redirect("/admin/units");
 }

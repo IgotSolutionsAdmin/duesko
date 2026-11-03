@@ -5,6 +5,17 @@ const peso = new Intl.NumberFormat("en-PH", {
   currency: "PHP",
 });
 
+/** "2026-12-15" or an ISO timestamp becomes "Dec 15". */
+export function formatShortDay(iso: string): string {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return iso;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
 /** Format integer centavos as Philippine pesos. ₱1.00 is 100 centavos. */
 export function formatCentavos(centavos: number): string {
   return peso.format(centavos / 100);

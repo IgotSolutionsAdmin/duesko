@@ -2,7 +2,7 @@
 
 DuesKo is a dues collection app for Philippine homeowners' associations. A resident sees only their own unit. An admin treasurer sees every unit and who has paid. Money is stored as integer centavos and shown as Philippine pesos.
 
-Day 3 adds charges and an optional Supabase path. With no env values, the app stays on the mock repository and the DEV ONLY demo sign-in. When the public Supabase URL and anon key are set, `getRepository()` uses `SupabaseDuesRepository` and sign-in is Supabase Auth email and password.
+Officers and residents use separate portals. Officers sign in at `/admin/login`. Residents sign in at `/resident/login`. A resident uploads a photo of a GCash, bank, or other payment. An officer approves or rejects it. Cash and other manual payments are recorded by the officer and approved immediately. There is no online checkout.
 
 ## Run locally
 
@@ -45,6 +45,9 @@ The dashboard may label the public key "anon public" or "publishable". Put that 
 Apply the migration files in this order:
 
 1. `supabase/migrations/20261102120000_v3_initial.sql`
+2. `supabase/migrations/20261103120000_payment_proofs.sql`
+
+The second migration adds proof status, the review audit columns, and a private Storage bucket named `payment-proofs`. Object paths are `{hoa_id}/{charge_id}/{uuid}.ext`. Only the resident for that charge can upload. That resident and the HOA officers can read the file through a short-lived signed URL.
 
 Then:
 
@@ -58,13 +61,12 @@ Then:
 
 `DuesRepository` in `lib/repository.ts` is the seam. `getRepository()` returns an in-memory repository over `lib/mock/seed.json`, or `SupabaseDuesRepository` when the public env vars are set. A resident id returns only that resident's unit and charges. An admin treasurer id returns every unit in the HOA, and can save the registered name, edit units, create monthly dues for every unit, and create a special assessment for every unit or a chosen subset. Amounts are integer centavos.
 
-The SQL for the same rules is `supabase/migrations/20261102120000_v3_initial.sql`. Tables: `hoas` (`registered_name`), `units` (flat or per-sqm rate), `users` (`admin_treasurer` or `resident`), `charges` (dues and special assessments, unpaid or paid), `payments` (PayMongo or manual cash, optional `hoa_reference_no`), and `payment_links`. `users.id` references `auth.users`.
+The SQL is the two migration files above. Tables include `hoas`, `units`, `users`, `charges`, and `payments` (cash, GCash, bank transfer, or other, with a pending, approved, or rejected status). `payment_links` is left in the first migration and is not used. `users.id` references `auth.users`.
 
 ## Next steps
 
 Later days:
 
-- PayMongo checkout with the HOA's own test keys, and an idempotent webhook
-- Manual cash with the optional HOA reference number, and the payment acknowledgment label
+- Downloadable payment acknowledgments and CSV export
 - Who-has-paid for the admin treasurer, the resident account, and a shareable pay link
 - CSV export of payments and balances

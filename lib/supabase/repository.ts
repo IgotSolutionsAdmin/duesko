@@ -5,6 +5,8 @@ import {
   parseDueDate,
   parsePeriod,
 } from "../charges";
+import { proofObjectPath, storedChargeStatus } from "../payments";
+import type { ManualDraft, ProofDraft } from "../payments";
 import type { DuesRepository, Failure, Result } from "../repository";
 import type {
   AppUser,
@@ -341,13 +343,154 @@ export function createSupabaseRepository(
       return (data as ChargeRow[]).map(toCharge);
     },
 
-    async listPayments(userId) {
-      if (!sameUser(userId)) return [];
+    async submitProof(userId, input: ProofDraft) {
+      if (!sameUser(userId)) return denied();
+      const user = await actor();
+      if (!user || user.role !== "resident" || !user.unitId) {
+        return { ok: false, message: "Only a resident can upload proof." };
+      }
+      const charges = await this.listCharges(userId);
+      const payments = await this.listPayments(userId);
+      const charge = charges.find((row) => row.id === input.chargeId);
+      if (!charge || charge.unitId !== user.unitId) {
+        return { ok: false, message: "Choose one of your charges." };
+      }
+      if (storedChargeStatus(charge, payments) === "paid") {
+        return { ok: false, message: "That charge is already paid." };
+      }
+      const path = proofObjectPath(charge.hoaId, charge.id, input.extension);
+      const uploaded = await client.storage
+        .from("payment-proofs")
+        .upload(path, input.bytes, { contentType: input.contentType, upsert: false });
+      if (uploaded.error) {
+        return { ok: false, message: "Could not store the photo." };
+      }
+      const inserted = await client
+        .from("payments")
+        .insert({
+          hoa_id: charge.hoaId,
+          charge_id: charge.id,
+          unit_id: charge.unitId,
+          method: input.method,
+          amount_centavos: input.amountCentavos,
+          paid_at: input.paidAt,
+          reference_no: input.referenceNo,
+          proof_path: path,
+          status: "pending",
+          recorded_by: user.id,
+        })
+        .select(PAYMENT_COLUMNS)
+        .single();
+      if (inserted.error || !inserted.data) {
+        await client.storage.from("payment-proofs").remove([path]);
+        return { ok: false, message: "Could not save the proof." };
+      }
+      return { ok: true, value: toPayment(inserted.data as PaymentRow) };
+    },
+
+    async approvePayment(userId, paymentId) {
+      if (!sameUser(userId)) return denied();
+      const admin = await requireAdmin();
+      if (isFailure(admin)) return admin;
+      const reviewedAt = new Date().toISOString();
       const { data, error } = await client
         .from("payments")
-        .select(
-          "id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, provider_payment_id, hoa_reference_no, recorded_by",
-        );
+        .update({
+          status: "approved",
+          reviewed_by: admin.id,
+          reviewed_at: reviewedAt,
+          rejection_reason: null,
+        })
+        .eq("id", paymentId)
+        .eq("hoa_id", admin.hoaId)
+        .eq("status", "pending")
+        .select(PAYMENT_COLUMNS)
+        .maybeSingle();
+      if (error || !data) return { ok: false, message: "That proof is not pending." };
+      const payment = toPayment(data as PaymentRow);
+      await syncCharge(client, payment.chargeId);
+      return { ok: true, value: payment };
+    },
+
+    async rejectPayment(userId, paymentId, reason) {
+      if (!sameUser(userId)) return denied();
+      const admin = await requireAdmin();
+      if (isFailure(admin)) return admin;
+      const rejectionReason = reason.trim().replace(/\s+/g, " ");
+      if (!rejectionReason) {
+        return { ok: false, message: "A reason is required to reject a proof." };
+      }
+      const reviewedAt = new Date().toISOString();
+      const { data, error } = await client
+        .from("payments")
+        .update({
+          status: "rejected",
+          rejection_reason: rejectionReason,
+          reviewed_by: admin.id,
+          reviewed_at: reviewedAt,
+        })
+        .eq("id", paymentId)
+        .eq("hoa_id", admin.hoaId)
+        .eq("status", "pending")
+        .select(PAYMENT_COLUMNS)
+        .maybeSingle();
+      if (error || !data) return { ok: false, message: "That proof is not pending." };
+      const payment = toPayment(data as PaymentRow);
+      await syncCharge(client, payment.chargeId);
+      return { ok: true, value: payment };
+    },
+
+    async recordManualPayment(userId, input: ManualDraft) {
+      if (!sameUser(userId)) return denied();
+      const admin = await requireAdmin();
+      if (isFailure(admin)) return admin;
+      const charges = await this.listCharges(userId);
+      const charge = charges.find((row) => row.id === input.chargeId);
+      if (!charge) return { ok: false, message: "Choose a unit charge." };
+      const reviewedAt = new Date().toISOString();
+      const { data, error } = await client
+        .from("payments")
+        .insert({
+          hoa_id: charge.hoaId,
+          charge_id: charge.id,
+          unit_id: charge.unitId,
+          method: input.method,
+          amount_centavos: input.amountCentavos,
+          paid_at: input.paidAt,
+          hoa_reference_no: input.hoaReferenceNo,
+          note: input.note,
+          status: "approved",
+          reviewed_by: admin.id,
+          reviewed_at: reviewedAt,
+          recorded_by: admin.id,
+        })
+        .select(PAYMENT_COLUMNS)
+        .single();
+      if (error || !data) return { ok: false, message: "Could not record the payment." };
+      const payment = toPayment(data as PaymentRow);
+      await syncCharge(client, charge.id);
+      return { ok: true, value: payment };
+    },
+
+    async getProofUrl(userId, paymentId) {
+      if (!sameUser(userId)) return { ok: false, message: "Sign in is required." };
+      const payments = await this.listPayments(userId);
+      const payment = payments.find((row) => row.id === paymentId);
+      if (!payment?.proofPath) {
+        return { ok: false, message: "That proof is not available." };
+      }
+      const signed = await client.storage
+        .from("payment-proofs")
+        .createSignedUrl(payment.proofPath, 60);
+      if (signed.error || !signed.data?.signedUrl) {
+        return { ok: false, message: "That proof is not available." };
+      }
+      return { ok: true, value: signed.data.signedUrl };
+    },
+
+    async listPayments(userId) {
+      if (!sameUser(userId)) return [];
+      const { data, error } = await client.from("payments").select(PAYMENT_COLUMNS);
       if (error || !data) return [];
       return (data as PaymentRow[]).map(toPayment);
     },
@@ -389,6 +532,9 @@ export function createSupabaseRepository(
   };
 }
 
+const PAYMENT_COLUMNS =
+  "id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, provider_payment_id, reference_no, hoa_reference_no, proof_path, status, rejection_reason, reviewed_by, reviewed_at, note, recorded_by";
+
 type PaymentRow = {
   id: string;
   hoa_id: string;
@@ -398,7 +544,14 @@ type PaymentRow = {
   amount_centavos: number;
   paid_at: string;
   provider_payment_id: string | null;
+  reference_no: string | null;
   hoa_reference_no: string | null;
+  proof_path: string | null;
+  status: Payment["status"];
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  note: string | null;
   recorded_by: string | null;
 };
 
@@ -412,9 +565,38 @@ function toPayment(row: PaymentRow): Payment {
     amountCentavos: row.amount_centavos,
     paidAt: row.paid_at,
     providerPaymentId: row.provider_payment_id,
+    referenceNo: row.reference_no,
     hoaReferenceNo: row.hoa_reference_no,
+    proofPath: row.proof_path,
+    status: row.status,
+    rejectionReason: row.rejection_reason,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at,
+    note: row.note,
     recordedBy: row.recorded_by,
   };
+}
+
+async function syncCharge(client: SupabaseClient, chargeId: string) {
+  const charges = await client
+    .from("charges")
+    .select("id, hoa_id, unit_id, kind, description, period, amount_centavos, due_date, status")
+    .eq("id", chargeId)
+    .maybeSingle();
+  if (charges.error || !charges.data) return;
+  const charge = toCharge(charges.data as ChargeRow);
+  const payments = await client
+    .from("payments")
+    .select(PAYMENT_COLUMNS)
+    .eq("charge_id", chargeId);
+  if (payments.error || !payments.data) return;
+  const status = storedChargeStatus(
+    charge,
+    (payments.data as PaymentRow[]).map(toPayment),
+  );
+  if (status !== charge.status) {
+    await client.from("charges").update({ status }).eq("id", chargeId);
+  }
 }
 
 function normalizeDraft(draft: UnitDraft): Result<UnitDraft> {

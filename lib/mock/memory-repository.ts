@@ -1,4 +1,6 @@
 import { duesDescription, monthlyAmountCentavos, parseDueDate, parsePeriod } from "../charges";
+import { issueProofToken } from "./proof-tokens";
+import { proofObjectPath, storedChargeStatus } from "../payments";
 import type {
   DuesRepository,
   Failure,
@@ -6,7 +8,7 @@ import type {
   Result,
   SpecialAssessmentInput,
 } from "../repository";
-import type { AppUser, Charge, SeedData, Unit, UnitDraft } from "../types";
+import type { AppUser, Charge, Payment, SeedData, Unit, UnitDraft } from "../types";
 
 function copy<T extends object>(value: T): T {
   return { ...value };
@@ -19,6 +21,7 @@ function copy<T extends object>(value: T): T {
  * receives nothing.
  */
 export function createMemoryRepository(data: SeedData): DuesRepository {
+  const proofBytes = new Map<string, { bytes: Uint8Array; contentType: string }>();
   const usersById = new Map(data.users.map((user) => [user.id, user]));
 
   function actor(userId: string): AppUser | null {
@@ -177,6 +180,12 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
     };
   }
 
+  function refreshCharge(chargeId: string) {
+    const charge = data.charges.find((row) => row.id === chargeId);
+    if (!charge) return;
+    charge.status = storedChargeStatus(charge, data.payments);
+  }
+
   function labelTaken(hoaId: string, label: string, exceptId?: string): boolean {
     return data.units.some(
       (unit) =>
@@ -287,6 +296,127 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
         return copy(charge);
       });
       return { ok: true, value: created };
+    },
+
+    async submitProof(userId, input) {
+      const user = actor(userId);
+      if (!user || user.role !== "resident" || !user.unitId) {
+        return { ok: false, message: "Only a resident can upload proof." };
+      }
+      const charge = data.charges.find(
+        (row) => row.id === input.chargeId && row.unitId === user.unitId,
+      );
+      if (!charge) return { ok: false, message: "Choose one of your charges." };
+      if (storedChargeStatus(charge, data.payments) === "paid") {
+        return { ok: false, message: "That charge is already paid." };
+      }
+      const path = proofObjectPath(charge.hoaId, charge.id, input.extension);
+      proofBytes.set(path, { bytes: input.bytes, contentType: input.contentType });
+      const payment: Payment = {
+        id: crypto.randomUUID(),
+        hoaId: charge.hoaId,
+        chargeId: charge.id,
+        unitId: charge.unitId,
+        method: input.method,
+        amountCentavos: input.amountCentavos,
+        paidAt: input.paidAt,
+        providerPaymentId: null,
+        referenceNo: input.referenceNo,
+        hoaReferenceNo: null,
+        proofPath: path,
+        status: "pending",
+        rejectionReason: null,
+        reviewedBy: null,
+        reviewedAt: null,
+        note: null,
+        recordedBy: user.id,
+      };
+      data.payments.push(payment);
+      return { ok: true, value: copy(payment) };
+    },
+
+    async approvePayment(userId, paymentId) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const payment = data.payments.find(
+        (row) => row.id === paymentId && row.hoaId === admin.hoaId,
+      );
+      if (!payment || payment.status !== "pending") {
+        return { ok: false, message: "That proof is not pending." };
+      }
+      payment.status = "approved";
+      payment.reviewedBy = admin.id;
+      payment.reviewedAt = new Date().toISOString();
+      payment.rejectionReason = null;
+      refreshCharge(payment.chargeId);
+      return { ok: true, value: copy(payment) };
+    },
+
+    async rejectPayment(userId, paymentId, reason) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const rejectionReason = reason.trim().replace(/\s+/g, " ");
+      if (!rejectionReason) {
+        return { ok: false, message: "A reason is required to reject a proof." };
+      }
+      const payment = data.payments.find(
+        (row) => row.id === paymentId && row.hoaId === admin.hoaId,
+      );
+      if (!payment || payment.status !== "pending") {
+        return { ok: false, message: "That proof is not pending." };
+      }
+      payment.status = "rejected";
+      payment.rejectionReason = rejectionReason;
+      payment.reviewedBy = admin.id;
+      payment.reviewedAt = new Date().toISOString();
+      refreshCharge(payment.chargeId);
+      return { ok: true, value: copy(payment) };
+    },
+
+    async recordManualPayment(userId, input) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const charge = data.charges.find(
+        (row) => row.id === input.chargeId && row.hoaId === admin.hoaId,
+      );
+      if (!charge) return { ok: false, message: "Choose a unit charge." };
+      const now = new Date().toISOString();
+      const payment: Payment = {
+        id: crypto.randomUUID(),
+        hoaId: charge.hoaId,
+        chargeId: charge.id,
+        unitId: charge.unitId,
+        method: input.method,
+        amountCentavos: input.amountCentavos,
+        paidAt: input.paidAt,
+        providerPaymentId: null,
+        referenceNo: null,
+        hoaReferenceNo: input.hoaReferenceNo,
+        proofPath: null,
+        status: "approved",
+        rejectionReason: null,
+        reviewedBy: admin.id,
+        reviewedAt: now,
+        note: input.note,
+        recordedBy: admin.id,
+      };
+      data.payments.push(payment);
+      refreshCharge(charge.id);
+      return { ok: true, value: copy(payment) };
+    },
+
+    async getProofUrl(userId, paymentId) {
+      const user = actor(userId);
+      if (!user) return { ok: false, message: "Sign in is required." };
+      const visible = await this.listPayments(userId);
+      const payment = visible.find((row) => row.id === paymentId);
+      if (!payment?.proofPath) {
+        return { ok: false, message: "That proof is not available." };
+      }
+      const file = proofBytes.get(payment.proofPath);
+      if (!file) return { ok: false, message: "That proof is not available." };
+      const token = issueProofToken(file.bytes, file.contentType);
+      return { ok: true, value: `/dev/proofs/${token}` };
     },
 
     async listCharges(userId) {
