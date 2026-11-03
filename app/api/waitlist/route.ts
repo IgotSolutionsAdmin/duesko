@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fieldsFromFormData, submitWaitlist } from "@/lib/waitlist";
+import { fieldsFromFormData, isWaitlistOpen, submitWaitlist } from "@/lib/waitlist";
 
 function clientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -16,7 +16,19 @@ async function readFields(request: Request): Promise<Record<string, unknown>> {
 }
 
 export async function POST(request: Request) {
-  const result = await submitWaitlist(await readFields(request), {
+  if (!isWaitlistOpen()) {
+    return NextResponse.json(
+      { status: 403, message: "The waitlist opens soon. Check back shortly." },
+      { status: 403 },
+    );
+  }
+  let fields: Record<string, unknown>;
+  try {
+    fields = await readFields(request);
+  } catch {
+    return NextResponse.json({ status: 400, message: "Could not read the form." }, { status: 400 });
+  }
+  const result = await submitWaitlist(fields, {
     ip: clientIp(request),
     userAgent: request.headers.get("user-agent"),
   });

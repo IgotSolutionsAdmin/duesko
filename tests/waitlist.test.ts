@@ -86,6 +86,9 @@ describe("waitlist validation and flag", () => {
     clearEnv("NEXT_PUBLIC_DUESKO_WAITLIST_OPEN");
     const result = await submitWaitlist(valid, { ip: "10.0.0.1", userAgent: "test" });
     assert.equal(result.status, 403);
+    const { POST } = await import("../app/api/waitlist/route");
+    const response = await POST(new Request("http://127.0.0.1/api/waitlist", { method: "POST" }));
+    assert.equal(response.status, 403);
   });
 
   it("saves on the mock path when the waitlist is open", async () => {
