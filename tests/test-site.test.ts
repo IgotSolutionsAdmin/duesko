@@ -40,7 +40,7 @@ describe("test site flag", () => {
     assert.equal(useMockRepository(), true);
   });
 
-  it("uses the mock in local dev when Supabase is unset", () => {
+  it("keeps the mock off in local dev when the test-site flag is unset", () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("NEXT_PUBLIC_DUESKO_TEST_SITE", "");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
@@ -48,7 +48,8 @@ describe("test site flag", () => {
     delete process.env.NEXT_PUBLIC_DUESKO_TEST_SITE;
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    assert.equal(useMockRepository(), true);
+    assert.equal(isTestSite(), false);
+    assert.equal(useMockRepository(), false);
   });
 
   it("uses Supabase when it is configured, including on the test site", () => {

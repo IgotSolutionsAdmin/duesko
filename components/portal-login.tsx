@@ -8,7 +8,7 @@ import { signInAsDemo, signInWithPassword } from "@/lib/demo-auth-actions";
 import { seed } from "@/lib/mock/seed";
 import { homePath, roleLabel } from "@/lib/roles";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { isTestSite, useMockRepository } from "@/lib/test-site";
+import { useMockRepository } from "@/lib/test-site";
 import type { Role } from "@/lib/types";
 
 const authErrors: Record<string, string> = {
@@ -79,27 +79,6 @@ export async function PortalLogin({
           <label htmlFor="magic-email" className="text-sm font-medium">Email for a sign-in link</label>
           <input id="magic-email" name="email" type="email" required autoComplete="email" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
           <Button type="submit" variant="outline" className="h-12 w-full bg-white text-base">Email me a sign-in link</Button>
-        </form>
-      </LoginFrame>
-    );
-  }
-
-  if (isDemoAuthEnabled() && useMockRepository() && isTestSite() && process.env.DUESKO_E2E !== "1") {
-    const userId =
-      role === "admin_treasurer"
-        ? "33333333-3333-4333-8333-333333333301"
-        : "33333333-3333-4333-8333-333333333302";
-    const label =
-      role === "admin_treasurer"
-        ? "Sign in as demo admin (Ana Reyes)"
-        : "Sign in as demo resident (Juan dela Cruz)";
-    return (
-      <LoginFrame title={title} lede="No password. This sample account is not a real person." notice={error} noticeRole={noticeRole}>
-        <form action={signInAsDemo}>
-          <input type="hidden" name="userId" value={userId} suppressHydrationWarning />
-          <Button type="submit" className="h-12 w-full text-base">
-            {label}
-          </Button>
         </form>
       </LoginFrame>
     );

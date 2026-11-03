@@ -38,7 +38,9 @@
     ".next-test-site/types/**/*.ts",
     ".next-test-site/dev/types/**/*.ts",
     ".next-screens/types/**/*.ts",
-    ".next-screens/dev/types/**/*.ts"
+    ".next-screens/dev/types/**/*.ts",
+    ".next-off/types/**/*.ts",
+    ".next-off/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
