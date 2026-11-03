@@ -132,7 +132,11 @@ create table if not exists storage.objects (
   name text not null,
   owner uuid,
   created_at timestamptz not null default now()
-);`,
+);
+alter table storage.objects enable row level security;
+grant usage on schema storage to authenticated;
+grant select on table storage.buckets to authenticated;
+grant select, insert on table storage.objects to authenticated;`,
     );
     for (const file of [
       "supabase/migrations/20261102120000_v3_initial.sql",

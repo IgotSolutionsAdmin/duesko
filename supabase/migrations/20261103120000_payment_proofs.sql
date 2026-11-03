@@ -115,7 +115,8 @@ where public.is_admin_treasurer()
 
 grant select on table public.who_has_paid to authenticated;
 
--- Private bucket. Real projects already have the storage schema.
+-- Private bucket. Hosted Supabase already owns storage.objects and storage.buckets:
+-- RLS is enabled there, and authenticated already has the table grants.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
   'payment-proofs',
@@ -124,16 +125,7 @@ values (
   5242880,
   array['image/png', 'image/jpeg', 'image/webp']
 )
-on conflict (id) do update
-set public = false,
-    file_size_limit = excluded.file_size_limit,
-    allowed_mime_types = excluded.allowed_mime_types;
-
-alter table storage.objects enable row level security;
-
-grant usage on schema storage to authenticated;
-grant select on table storage.buckets to authenticated;
-grant select, insert on table storage.objects to authenticated;
+on conflict (id) do nothing;
 
 create policy payment_proofs_bucket_read on storage.buckets
   for select to authenticated
