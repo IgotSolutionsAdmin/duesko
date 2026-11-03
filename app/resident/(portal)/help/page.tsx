@@ -1,6 +1,6 @@
 import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { requireRole } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Help" };
 
@@ -20,9 +20,9 @@ export default async function HelpPage() {
           Cash you hand to an officer is recorded by them. You do not upload a proof for that.
         </p>
       </section>
-      {isSupabaseConfigured() ? null : (
+      {useMockRepository() ? (
         <DevRoleSwitch currentUserId={user.id} portal="resident" />
-      )}
+      ) : null}
     </div>
   );
 }

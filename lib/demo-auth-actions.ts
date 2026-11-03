@@ -7,6 +7,7 @@ import { getRepository } from "./get-repository";
 import { homePath } from "./roles";
 import { createAuthClient, createDataClient } from "./supabase/client";
 import { isSupabaseConfigured } from "./supabase/env";
+import { useMockRepository } from "./test-site";
 import { createSupabaseRepository } from "./supabase/repository";
 import {
   SUPABASE_ACCESS_COOKIE,
@@ -24,7 +25,7 @@ const cookieOptions = {
 
 /** Signs in as one of the seeded demo users. Only the mock repository uses this. */
 export async function signInAsDemo(formData: FormData) {
-  if (isSupabaseConfigured()) redirect("/sign-in");
+  if (!useMockRepository()) redirect("/");
 
   const userId = formData.get("userId");
   if (typeof userId !== "string") redirect("/sign-in");

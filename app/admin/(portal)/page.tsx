@@ -5,7 +5,7 @@ import { firstName } from "@/lib/greeting";
 import { getRepository } from "@/lib/get-repository";
 import { formatCentavos, formatShortDay } from "@/lib/money";
 import { approvedCentavos, chargeBalanceStatus } from "@/lib/payments";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Dashboard" };
 
@@ -136,9 +136,9 @@ export default async function AdminDashboard() {
         </ul>
       </section>
 
-      {isSupabaseConfigured() ? null : (
+      {useMockRepository() ? (
         <DevRoleSwitch currentUserId={user.id} portal="admin" />
-      )}
+      ) : null}
     </div>
   );
 }

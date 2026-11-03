@@ -8,15 +8,35 @@ export default defineConfig({
   timeout: 90_000,
   expect: { timeout: 15_000 },
   use: {
-    baseURL: "http://127.0.0.1:43117",
     viewport: { width: 390, height: 844 },
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
   },
-  webServer: {
-    command: "npm run dev",
-    url: "http://127.0.0.1:43117",
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  projects: [
+    {
+      name: "app",
+      testIgnore: "**/test-site.spec.ts",
+      use: { baseURL: "http://127.0.0.1:43117" },
+    },
+    {
+      name: "test-site",
+      testMatch: "**/test-site.spec.ts",
+      use: { baseURL: "http://127.0.0.1:43118" },
+    },
+  ],
+  webServer: [
+    {
+      command: "npm run dev",
+      url: "http://127.0.0.1:43117",
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      command:
+        "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next dev --hostname 0.0.0.0 --port 43118",
+      url: "http://127.0.0.1:43118",
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+  ],
 });

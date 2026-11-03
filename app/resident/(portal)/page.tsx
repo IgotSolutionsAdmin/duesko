@@ -6,7 +6,7 @@ import { firstName } from "@/lib/greeting";
 import { getRepository } from "@/lib/get-repository";
 import { describeMonthlyDues, formatCentavos, formatShortDay } from "@/lib/money";
 import { approvedCentavos, chargeBalanceStatus, methodLabel } from "@/lib/payments";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Your account" };
 
@@ -103,9 +103,9 @@ export default async function ResidentHome() {
           View payment acknowledgments ›
         </Link>
       </section>
-      {isSupabaseConfigured() ? null : (
+      {useMockRepository() ? (
         <DevRoleSwitch currentUserId={user.id} portal="resident" />
-      )}
+      ) : null}
     </div>
   );
 }

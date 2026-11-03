@@ -15,7 +15,7 @@ npm run dev
 
 Open [http://127.0.0.1:43117](http://127.0.0.1:43117).
 
-Demo sign-in has no password. It is marked **DEV ONLY** and sets a cookie for one of two seeded accounts at Villa Esperanza Homeowners Association, Inc.:
+Demo sign-in has no password. Locally it is marked **DEV ONLY** and sets a cookie for one of two seeded accounts at Villa Esperanza Homeowners Association, Inc. A production build shows those buttons only when `NEXT_PUBLIC_DUESKO_TEST_SITE=true`. The sample store resets on a cold start. See [DEPLOY.md](DEPLOY.md).
 
 - Ana Reyes, admin treasurer
 - Juan dela Cruz, resident of Blk 1 Lot 4
@@ -37,6 +37,7 @@ Copy `.env.example` to `.env.local`. Leave the values empty to use the mock. Fil
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser and server. Together with the anon key, this switches the app off the mock. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser and server. Row level security still applies. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only, in `lib/supabase/service.ts`. Bypasses row level security. Never use a `NEXT_PUBLIC_` name for it. |
+| `NEXT_PUBLIC_DUESKO_TEST_SITE` | Set to `true` for a public sample site. Turns on the test banner, the mock, and passwordless demo sign-in in production. |
 
 The dashboard may label the public key "anon public" or "publishable". Put that value in `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 

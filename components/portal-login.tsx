@@ -5,6 +5,7 @@ import { signInAsDemo, signInWithPassword } from "@/lib/demo-auth-actions";
 import { seed } from "@/lib/mock/seed";
 import { homePath, roleLabel } from "@/lib/roles";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isTestSite, useMockRepository } from "@/lib/test-site";
 import type { Role } from "@/lib/types";
 
 const authErrors: Record<string, string> = {
@@ -27,7 +28,28 @@ export async function PortalLogin({
   const title = role === "admin_treasurer" ? "Officer sign in" : "Resident sign in";
   const error = errorCode ? (authErrors[errorCode] ?? null) : null;
 
-  if (isSupabaseConfigured()) {
+  if (useMockRepository() && isTestSite()) {
+    const userId =
+      role === "admin_treasurer"
+        ? "33333333-3333-4333-8333-333333333301"
+        : "33333333-3333-4333-8333-333333333302";
+    const label =
+      role === "admin_treasurer"
+        ? "Sign in as demo admin (Ana Reyes)"
+        : "Sign in as demo resident (Juan dela Cruz)";
+    return (
+      <LoginFrame title={title} lede="No password. This sample account is not a real person.">
+        <form action={signInAsDemo}>
+          <input type="hidden" name="userId" value={userId} />
+          <Button type="submit" className="h-12 w-full text-base">
+            {label}
+          </Button>
+        </form>
+      </LoginFrame>
+    );
+  }
+
+  if (!useMockRepository() && isSupabaseConfigured()) {
     return (
       <LoginFrame title={title} lede="Use the email and password for your Supabase Auth account.">
         <form action={signInWithPassword} className="flex flex-col gap-3">
@@ -38,6 +60,17 @@ export async function PortalLogin({
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="h-12 w-full text-base">Sign in</Button>
         </form>
+      </LoginFrame>
+    );
+  }
+
+  if (!useMockRepository()) {
+    return (
+      <LoginFrame
+        title={title}
+        lede="This production build has no database. Set the Supabase env vars, or NEXT_PUBLIC_DUESKO_TEST_SITE=true for the sample site."
+      >
+        <p className="text-sm leading-6 text-ink/70">Demo sign-in is turned off.</p>
       </LoginFrame>
     );
   }

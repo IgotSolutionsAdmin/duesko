@@ -3,6 +3,7 @@ import { createMemoryRepository } from "./mock/memory-repository";
 import { seed } from "./mock/seed";
 import type { DuesRepository, Failure } from "./repository";
 import { isSupabaseConfigured } from "./supabase/env";
+import { useMockRepository } from "./test-site";
 import { createSupabaseRepository } from "./supabase/repository";
 import { openDataClient } from "./supabase/session";
 import { resetProofTokens } from "./mock/proof-tokens";
@@ -22,13 +23,20 @@ function openStore(): Store {
 }
 
 /**
- * Supabase when NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
- * are set. Otherwise the in-memory mock. The service role key is not read here.
+ * Test-site mode always uses the in-memory mock.
+ * Otherwise Supabase is used when its public env vars are set.
+ * A production build without either one has no data store.
+ * The service role key is not read here.
  */
 export function getRepository(): DuesRepository {
+  if (useMockRepository()) {
+    globalStore.__dueskoStore ??= openStore();
+    return globalStore.__dueskoStore.repository;
+  }
   if (isSupabaseConfigured()) return createRequestRepository();
-  globalStore.__dueskoStore ??= openStore();
-  return globalStore.__dueskoStore.repository;
+  throw new Error(
+    "DuesKo has no data store. Set the Supabase env vars, or NEXT_PUBLIC_DUESKO_TEST_SITE=true for the sample site.",
+  );
 }
 
 function createRequestRepository(): DuesRepository {

@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { DEMO_COOKIE } from "./lib/demo-cookie";
 import { DEMO_ROLE_BY_ID } from "./lib/demo-directory";
 import { SUPABASE_ACCESS_COOKIE } from "./lib/supabase/cookie-names";
+import { useMockRepository } from "./lib/test-site";
 import type { Role } from "./lib/types";
 
 export async function proxy(request: NextRequest) {
@@ -35,8 +36,11 @@ function redirect(request: NextRequest, path: string) {
 }
 
 async function resolveRole(request: NextRequest): Promise<Role | null> {
-  const demoId = request.cookies.get(DEMO_COOKIE)?.value;
-  if (demoId && DEMO_ROLE_BY_ID[demoId]) return DEMO_ROLE_BY_ID[demoId];
+  if (useMockRepository()) {
+    const demoId = request.cookies.get(DEMO_COOKIE)?.value;
+    if (demoId && DEMO_ROLE_BY_ID[demoId]) return DEMO_ROLE_BY_ID[demoId];
+    return null;
+  }
 
   const access = request.cookies.get(SUPABASE_ACCESS_COOKIE)?.value;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
