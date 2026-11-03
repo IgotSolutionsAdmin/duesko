@@ -132,6 +132,14 @@ async function Payments({
                 <span className="block text-sm text-ink/60">
                   {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
                 </span>
+                {payment.status === "approved" ? (
+                  <Link
+                    href={`/admin/acknowledgments?payment=${payment.id}`}
+                    className="mt-1 inline-block text-sm font-semibold text-teal-deep"
+                  >
+                    Open acknowledgment
+                  </Link>
+                ) : null}
               </span>
               <span className="text-right">
                 <StatusPill status={payment.status} />

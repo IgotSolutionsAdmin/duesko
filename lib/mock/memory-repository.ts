@@ -8,7 +8,8 @@ import type {
   Result,
   SpecialAssessmentInput,
 } from "../repository";
-import type { AppUser, Charge, Payment, SeedData, Unit, UnitDraft } from "../types";
+import { createDueskoReference } from "../duesko-reference";
+import type { AppUser, Charge, ExportAudit, Payment, SeedData, Unit, UnitDraft } from "../types";
 
 function copy<T extends object>(value: T): T {
   return { ...value };
@@ -23,6 +24,7 @@ function copy<T extends object>(value: T): T {
 export function createMemoryRepository(data: SeedData): DuesRepository {
   const proofBytes = new Map<string, { bytes: Uint8Array; contentType: string }>();
   const usersById = new Map(data.users.map((user) => [user.id, user]));
+  const exportLog: ExportAudit[] = [];
 
   function actor(userId: string): AppUser | null {
     return usersById.get(userId) ?? null;
@@ -330,6 +332,7 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
         reviewedAt: null,
         note: null,
         recordedBy: user.id,
+        dueskoReference: createDueskoReference(),
       };
       data.payments.push(payment);
       return { ok: true, value: copy(payment) };
@@ -399,6 +402,7 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
         reviewedAt: now,
         note: input.note,
         recordedBy: admin.id,
+        dueskoReference: createDueskoReference(),
       };
       data.payments.push(payment);
       refreshCharge(charge.id);
@@ -455,6 +459,22 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
           .map(copy);
       }
       return [copy(user)];
+    },
+
+    async recordExport(userId, input) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const entry: ExportAudit = {
+        id: crypto.randomUUID(),
+        hoaId: admin.hoaId,
+        exportedBy: admin.id,
+        kind: input.kind,
+        month: input.month,
+        status: input.status,
+        createdAt: new Date().toISOString(),
+      };
+      exportLog.push(entry);
+      return { ok: true, value: copy(entry) };
     },
   };
 }

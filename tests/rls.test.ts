@@ -141,6 +141,7 @@ grant select, insert on table storage.objects to authenticated;`,
     for (const file of [
       "supabase/migrations/20261102120000_v3_initial.sql",
       "supabase/migrations/20261103120000_payment_proofs.sql",
+      "supabase/migrations/20261103180000_export_and_acknowledgments.sql",
     ]) {
       execFileSync(
         "sudo",
@@ -205,6 +206,18 @@ rollback;`,
 
     assert.equal(asUser(resident.id, "select count(*) from public.payments;"), "0");
     assert.equal(asUser(admin.id, "select count(*) from public.payments;"), "1");
+    assert.equal(asUser(resident.id, "select count(*) from public.export_audit_log;"), "0");
+    psql(
+      database,
+      `begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '${admin.id}', true);
+insert into public.export_audit_log (hoa_id, exported_by, kind)
+values ('${admin.hoaId}', '${admin.id}', 'payments');
+commit;`,
+    );
+    assert.equal(asUser(admin.id, "select count(*) from public.export_audit_log;"), "1");
+    assert.equal(asUser(resident.id, "select count(*) from public.export_audit_log;"), "0");
 
     const ownCharge = seed.charges.find((charge) => charge.unitId === resident.unitId);
     const otherCharge = seed.charges.find((charge) => charge.unitId !== resident.unitId);

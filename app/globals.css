@@ -170,3 +170,9 @@ form:has(input[name="kind"][value="special"]:checked) .kind-special {
   display: flex;
   flex-direction: column;
 }
+
+@media print {
+  body {
+    background: white;
+  }
+}

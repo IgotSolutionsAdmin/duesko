@@ -137,6 +137,11 @@ function createRequestRepository(): DuesRepository {
       if (!repository) return [];
       return repository.listUsers(userId);
     },
+    async recordExport(userId, input) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.recordExport(userId, input);
+    },
   };
 }
 

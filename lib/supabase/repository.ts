@@ -5,6 +5,7 @@ import {
   parseDueDate,
   parsePeriod,
 } from "../charges";
+import { createDueskoReference } from "../duesko-reference";
 import { proofObjectPath, storedChargeStatus } from "../payments";
 import type { ManualDraft, ProofDraft } from "../payments";
 import type { DuesRepository, Failure, Result } from "../repository";
@@ -378,6 +379,7 @@ export function createSupabaseRepository(
           proof_path: path,
           status: "pending",
           recorded_by: user.id,
+          duesko_reference: createDueskoReference(),
         })
         .select(PAYMENT_COLUMNS)
         .single();
@@ -463,6 +465,7 @@ export function createSupabaseRepository(
           reviewed_by: admin.id,
           reviewed_at: reviewedAt,
           recorded_by: admin.id,
+          duesko_reference: createDueskoReference(),
         })
         .select(PAYMENT_COLUMNS)
         .single();
@@ -529,11 +532,50 @@ export function createSupabaseRepository(
       if (error || !data) return [];
       return (data as UserRow[]).map(toUser);
     },
+
+    async recordExport(userId, input) {
+      if (!sameUser(userId)) return denied();
+      const admin = await requireAdmin();
+      if (isFailure(admin)) return admin;
+      const { data, error } = await client
+        .from("export_audit_log")
+        .insert({
+          hoa_id: admin.hoaId,
+          exported_by: admin.id,
+          kind: input.kind,
+          month: input.month,
+          status: input.status,
+        })
+        .select("id, hoa_id, exported_by, kind, month, status, created_at")
+        .single();
+      if (error || !data) return { ok: false, message: "Could not record the export." };
+      const row = data as {
+        id: string;
+        hoa_id: string;
+        exported_by: string;
+        kind: "units" | "charges" | "payments";
+        month: string | null;
+        status: string | null;
+        created_at: string;
+      };
+      return {
+        ok: true,
+        value: {
+          id: row.id,
+          hoaId: row.hoa_id,
+          exportedBy: row.exported_by,
+          kind: row.kind,
+          month: row.month,
+          status: row.status,
+          createdAt: row.created_at,
+        },
+      };
+    },
   };
 }
 
 const PAYMENT_COLUMNS =
-  "id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, provider_payment_id, reference_no, hoa_reference_no, proof_path, status, rejection_reason, reviewed_by, reviewed_at, note, recorded_by";
+  "id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, provider_payment_id, reference_no, hoa_reference_no, proof_path, status, rejection_reason, reviewed_by, reviewed_at, note, recorded_by, duesko_reference";
 
 type PaymentRow = {
   id: string;
@@ -553,6 +595,7 @@ type PaymentRow = {
   reviewed_at: string | null;
   note: string | null;
   recorded_by: string | null;
+  duesko_reference: string | null;
 };
 
 function toPayment(row: PaymentRow): Payment {
@@ -574,6 +617,7 @@ function toPayment(row: PaymentRow): Payment {
     reviewedAt: row.reviewed_at,
     note: row.note,
     recordedBy: row.recorded_by,
+    dueskoReference: row.duesko_reference ?? null,
   };
 }
 

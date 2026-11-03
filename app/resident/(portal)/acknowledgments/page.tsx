@@ -2,7 +2,6 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
 import { formatCentavos, formatShortDay } from "@/lib/money";
-import { methodLabel } from "@/lib/payments";
 
 export const metadata = { title: "Acknowledgments" };
 
@@ -30,16 +29,20 @@ export default async function ResidentAcknowledgmentsPage() {
       ) : (
         <ul className="flex flex-col gap-3">
           {approved.map((payment) => (
-            <li key={payment.id} className="rounded-3xl bg-white p-5">
-              <p className="text-xs font-semibold tracking-[0.14em] text-ink/50">PAYMENT ACKNOWLEDGMENT</p>
-              <p className="mt-2 font-heading text-3xl font-semibold">{formatCentavos(payment.amountCentavos)}</p>
-              <p className="mt-2 text-sm text-ink/70">{names.get(payment.chargeId)}</p>
-              <p className="text-sm text-ink/70">
-                {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
-              </p>
-              <button type="button" disabled className="mt-4 h-11 w-full rounded-2xl border border-border text-sm text-ink/40">
-                Download acknowledgment
-              </button>
+            <li key={payment.id}>
+              <Link
+                href={`/resident/acknowledgments/${payment.id}`}
+                className="block rounded-3xl bg-white p-5"
+              >
+                <p className="text-xs font-semibold tracking-[0.14em] text-ink/50">
+                  PAYMENT ACKNOWLEDGMENT
+                </p>
+                <p className="mt-2 font-heading text-3xl font-semibold">
+                  {formatCentavos(payment.amountCentavos)}
+                </p>
+                <p className="mt-2 text-sm text-ink/70">{names.get(payment.chargeId)}</p>
+                <p className="text-sm text-ink/70">{formatShortDay(payment.paidAt)}</p>
+              </Link>
             </li>
           ))}
         </ul>

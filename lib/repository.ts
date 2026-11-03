@@ -1,6 +1,8 @@
 import type {
   AppUser,
   Charge,
+  ExportAudit,
+  ExportKind,
   Hoa,
   Payment,
   PaymentLink,
@@ -71,4 +73,8 @@ export interface DuesRepository {
   listPayments(userId: string): Promise<Payment[]>;
   listPaymentLinks(userId: string): Promise<PaymentLink[]>;
   listUsers(userId: string): Promise<AppUser[]>;
+  recordExport(
+    userId: string,
+    input: { kind: ExportKind; month: string | null; status: string | null },
+  ): Promise<Result<ExportAudit>>;
 }

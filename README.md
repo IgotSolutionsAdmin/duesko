@@ -47,6 +47,7 @@ Apply the migration files in this order:
 
 1. `supabase/migrations/20261102120000_v3_initial.sql`
 2. `supabase/migrations/20261103120000_payment_proofs.sql`
+3. `supabase/migrations/20261103180000_export_and_acknowledgments.sql`
 
 The second migration adds proof status, the review audit columns, and a private Storage bucket named `payment-proofs`. Object paths are `{hoa_id}/{charge_id}/{uuid}.ext`. Only the resident for that charge can upload. That resident and the HOA officers can read the file through a short-lived signed URL.
 

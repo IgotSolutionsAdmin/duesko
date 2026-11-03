@@ -13,7 +13,7 @@ export function AdminNav({ hoaName }: { hoaName: string }) {
   return (
     <>
       <aside
-        className="hidden h-dvh w-[260px] shrink-0 flex-col border-r border-[#e3eeec] bg-white px-5 py-7 lg:flex"
+        className="hidden h-dvh w-[260px] shrink-0 flex-col border-r border-[#e3eeec] bg-white px-5 py-7 print:hidden lg:flex"
         aria-label="Officer menu"
       >
         <Brand />
@@ -29,7 +29,7 @@ export function AdminNav({ hoaName }: { hoaName: string }) {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#e3eeec] bg-white px-5 py-3 lg:hidden">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#e3eeec] bg-white px-5 py-3 print:hidden lg:hidden">
         <Brand />
         <div className="flex min-w-0 items-center gap-2">
           <Link
@@ -69,7 +69,7 @@ export function AdminNav({ hoaName }: { hoaName: string }) {
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2 print:hidden lg:hidden"
         aria-label="Officer"
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5">

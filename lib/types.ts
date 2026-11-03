@@ -73,6 +73,19 @@ export interface Payment {
   reviewedAt: string | null;
   note: string | null;
   recordedBy: string | null;
+  dueskoReference: string | null;
+}
+
+export type ExportKind = "units" | "charges" | "payments";
+
+export interface ExportAudit {
+  id: string;
+  hoaId: string;
+  exportedBy: string;
+  kind: ExportKind;
+  month: string | null;
+  status: string | null;
+  createdAt: string;
 }
 
 export interface PaymentLink {
