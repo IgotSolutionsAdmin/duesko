@@ -46,7 +46,7 @@ async function CashForm({
           Record cash payment
         </h1>
       </header>
-      <form action={recordCashPayment} className="flex flex-col gap-4 rounded-3xl bg-white p-5">
+      <form action={recordCashPayment} className="flex flex-col gap-4 rounded-xl border border-border bg-white p-5">
         <label htmlFor="chargeId" className="text-sm font-medium text-ink">
           Unit
         </label>

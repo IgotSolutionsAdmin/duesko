@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DataRow, DataTable } from "@/components/data-table";
 import { ListEmpty } from "@/components/list-state";
 import { SampleBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,8 +21,8 @@ export default async function UnitsPage() {
     <div className="flex flex-col gap-4">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-teal-deep">Units</p>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
+          <p className="text-[13px] font-medium text-ink/50">Units</p>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">
             {units.length} on file
           </h1>
         </div>
@@ -30,26 +31,30 @@ export default async function UnitsPage() {
       {units.length === 0 ? (
         <ListEmpty>{LIST_COPY.unitsEmpty}</ListEmpty>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <DataTable
+          caption="Units on file"
+          headers={[{ label: "Unit" }, { label: "Rate" }, { label: "Amount" }, { label: "Edit" }]}
+        >
           {units.map((unit) => (
-            <li key={unit.id} className="rounded-3xl bg-white p-4">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="font-heading text-xl font-semibold">{unit.label}</h2>
-              </div>
-              <p className="mt-2 font-heading text-2xl font-semibold text-teal">
-                {formatCentavos(monthlyDuesCentavos(unit))}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-ink/70">{describeMonthlyDues(unit)}</p>
-              <Link
-                href={`/admin/units/${unit.id}`}
-                className="mt-3 inline-flex min-h-11 items-center text-base font-medium text-teal-deep"
-                aria-label={`Edit ${unit.label}`}
-              >
-                Edit
-              </Link>
-            </li>
+            <DataRow key={unit.id}>
+              <td className="px-3 py-2.5">
+                <h2 className="text-[13px] font-semibold">{unit.label}</h2>
+                <p className="text-[12px] text-ink/50">{describeMonthlyDues(unit)}</p>
+              </td>
+              <td className="px-3 py-2.5 text-ink/70">{unit.rateType === "flat" ? "Flat" : "Per sqm"}</td>
+              <td className="px-3 py-2.5 font-medium">{formatCentavos(monthlyDuesCentavos(unit))}</td>
+              <td className="px-3 py-2.5">
+                <Link
+                  href={`/admin/units/${unit.id}`}
+                  className="inline-flex min-h-11 items-center font-medium text-teal-deep"
+                  aria-label={`Edit ${unit.label}`}
+                >
+                  Edit
+                </Link>
+              </td>
+            </DataRow>
           ))}
-        </ul>
+        </DataTable>
       )}
       <Link
         href="/admin/units/new"

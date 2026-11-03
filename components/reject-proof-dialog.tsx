@@ -52,9 +52,9 @@ export function RejectProofDialog({ paymentId }: { paymentId: string }) {
           <form
             onSubmit={onSubmit}
             noValidate
-            className="flex w-full max-w-md flex-col gap-3 rounded-3xl bg-white p-5"
+            className="flex w-full max-w-md flex-col gap-3 rounded-xl border border-border bg-white p-5"
           >
-            <h2 id={`reject-title-${paymentId}`} className="font-heading text-xl font-semibold">
+            <h2 id={`reject-title-${paymentId}`} className="text-lg font-semibold">
               Reject this proof
             </h2>
             <p className="text-sm leading-6 text-ink/70">

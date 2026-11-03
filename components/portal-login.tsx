@@ -101,7 +101,7 @@ export async function PortalLogin({
           {people.map((user) => {
             const unit = seed.units.find((row) => row.id === user.unitId);
             return (
-              <form key={user.id} action={signInAsDemo} className="rounded-3xl bg-white p-4">
+              <form key={user.id} action={signInAsDemo} className="rounded-xl border border-border bg-white p-4">
                 <input type="hidden" name="userId" value={user.id} suppressHydrationWarning />
                 <p className="font-heading text-lg font-semibold">{user.fullName}</p>
                 <p className="mt-1 text-sm text-teal-deep">

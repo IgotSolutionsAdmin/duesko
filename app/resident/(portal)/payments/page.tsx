@@ -55,7 +55,7 @@ async function ResidentPayments({
         <Link href="/resident" className="text-2xl text-teal-deep" aria-label="Back">
           ‹
         </Link>
-        <h1 className="font-heading text-2xl font-semibold">
+        <h1 className="text-xl font-semibold">
           {query.reupload ? "Re-upload proof" : "Upload proof of payment"}
         </h1>
         {sample ? <SampleBadge /> : null}
@@ -72,8 +72,8 @@ async function ResidentPayments({
         reupload={query.reupload === "1"}
         serverError={query.error}
       />
-      <section className="rounded-3xl bg-white p-4" aria-label="Payment history">
-        <h2 className="font-heading text-lg font-semibold">Payment history</h2>
+      <section className="rounded-xl border border-border bg-white p-4" aria-label="Payment history">
+        <h2 className="text-[13px] font-semibold">Payment history</h2>
         {payments.length === 0 ? (
           <div className="mt-3">
             <ListEmpty>{LIST_COPY.paymentsEmpty}</ListEmpty>

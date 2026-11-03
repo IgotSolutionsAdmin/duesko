@@ -34,7 +34,7 @@ export default async function ResidentAcknowledgmentsPage() {
             <li key={payment.id}>
               <Link
                 href={`/resident/acknowledgments/${payment.id}`}
-                className="block rounded-3xl bg-white p-5"
+                className="block rounded-xl border border-border bg-white p-5"
               >
                 <p className="text-xs font-semibold tracking-[0.14em] text-ink/50">
                   PAYMENT ACKNOWLEDGMENT

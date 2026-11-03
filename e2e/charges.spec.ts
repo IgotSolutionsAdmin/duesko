@@ -47,7 +47,7 @@ test("create a special assessment for a selected unit", async ({ page }) => {
 
   const list = page.getByRole("region", { name: "Charge list" });
   await expect(list.getByRole("heading", { name: "Christmas lights" })).toHaveCount(1);
-  const card = list.locator("li").filter({ hasText: "Christmas lights" });
+  const card = list.locator("tr").filter({ hasText: "Christmas lights" });
   await expect(card.locator("p", { hasText: "₱500.00" })).toHaveCount(1);
   await expect(card.getByText("Blk 1 Lot 5")).toBeVisible();
   await expect(card.getByText("Unpaid")).toBeVisible();

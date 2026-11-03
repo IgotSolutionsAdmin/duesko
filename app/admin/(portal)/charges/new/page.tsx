@@ -41,7 +41,7 @@ async function NewCharge({
         </Link>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">Create charge</h1>
       </header>
-      <form action={createCharge} className="flex flex-col gap-4 rounded-3xl bg-white p-5">
+      <form action={createCharge} className="flex flex-col gap-4 rounded-xl border border-border bg-white p-5">
         <fieldset className="flex flex-col gap-2">
           <legend className="text-sm font-medium text-ink">
             Charge type

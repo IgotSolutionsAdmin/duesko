@@ -12,11 +12,11 @@ export default async function HelpPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <p className="text-sm font-medium text-teal-deep">Help</p>
-        <h1 className="mt-1 font-heading text-3xl font-semibold">Paying your dues</h1>
+        <p className="text-[13px] font-medium text-ink/50">Help</p>
+        <h1 className="mt-1 text-xl font-semibold">Paying your dues</h1>
       </header>
       <HowToPayCard howToPay={hoa?.howToPay} />
-      <section className="rounded-3xl bg-white p-5 text-sm leading-6 text-ink/80">
+      <section className="rounded-xl border border-border bg-white p-5 text-[13px] leading-6 text-ink/80">
         <p>
           DuesKo does not take payments. After you pay your association, upload a JPG, PNG, or PDF
           proof. An officer reviews it. If it is rejected, the reason appears on your account and

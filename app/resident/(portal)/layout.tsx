@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import { ContentToolbar } from "@/components/content-toolbar";
 import { ResidentNav } from "@/components/resident-nav";
 import { requireRole } from "@/lib/auth";
+import { getRepository } from "@/lib/get-repository";
 
 export default function ResidentPortalLayout({
   children,
@@ -17,11 +19,13 @@ export default function ResidentPortalLayout({
 }
 
 async function ResidentFrame({ children }: { children: React.ReactNode }) {
-  await requireRole("resident");
+  const user = await requireRole("resident");
+  const hoa = await getRepository().getHoa(user.id);
   return (
-    <div className="min-h-dvh bg-mist text-ink lg:flex">
-      <ResidentNav />
-      <main className="portal-main mx-auto flex min-h-dvh w-full max-w-lg flex-1 flex-col px-5 pt-6 lg:min-h-0 lg:max-w-none lg:px-10 lg:pt-8">
+    <div className="min-h-dvh bg-white text-ink lg:flex">
+      <ResidentNav userName={user.fullName} userEmail={user.email} hoaName={hoa?.registeredName} />
+      <main className="portal-main mx-auto flex min-h-dvh w-full max-w-lg flex-1 flex-col px-5 pt-5 lg:min-h-0 lg:max-w-none lg:px-8 lg:pt-6">
+        <ContentToolbar portal="resident" />
         {children}
         <div data-testid="page-end" aria-hidden className="h-px w-full shrink-0" />
       </main>

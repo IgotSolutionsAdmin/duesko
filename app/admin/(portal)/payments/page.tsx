@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
+import { DataRow, DataTable } from "@/components/data-table";
 import { ListEmpty, ListError, ListSkeleton } from "@/components/list-state";
 import { RejectProofDialog } from "@/components/reject-proof-dialog";
 import { StatusWithSample } from "@/components/status-badge";
@@ -53,18 +54,22 @@ async function Payments({
   const sample = useMockRepository();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <header className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-teal-deep">Payments</p>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
+          <p className="text-[13px] font-medium text-ink/50">Payments</p>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">
             Pending proofs
           </h1>
         </div>
-        <Link href="/admin/payments/cash" className="text-sm font-semibold text-teal-deep">
+        <Link href="/admin/payments/cash" className="text-[13px] font-semibold text-teal-deep">
           Record cash
         </Link>
       </header>
+      <div className="flex items-center gap-4 border-b border-border text-[13px]">
+        <span className="border-b-2 border-teal pb-2 font-medium text-ink">Pending</span>
+        <span className="pb-2 text-ink/40">All</span>
+      </div>
       {error ? (
         <ListError message={LIST_COPY.proofsLoadError} retryHref="/admin/payments" />
       ) : pending.length === 0 ? (
@@ -76,22 +81,22 @@ async function Payments({
           if the resident paid you directly.
         </ListEmpty>
       ) : (
-        <ul className="flex flex-col gap-4">
+        <ul className="flex flex-col gap-3">
           {pending.map((payment) => (
-            <li key={payment.id} className="rounded-3xl bg-white p-4">
+            <li key={payment.id} className="rounded-xl border border-border bg-white p-4">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-medium text-teal-deep">
+                <p className="text-[13px] font-medium text-teal-deep">
                   {labels.get(payment.unitId) ?? "Unit"}
                 </p>
                 <StatusWithSample status="pending" sample={sample} />
               </div>
-              <h2 className="mt-1 font-heading text-xl font-semibold">
+              <h2 className="mt-1 text-base font-semibold">
                 {chargeNames.get(payment.chargeId) ?? "Charge"}
               </h2>
-              <p className="mt-2 font-heading text-2xl font-semibold text-teal">
+              <p className="mt-2 text-lg font-semibold text-ink">
                 {formatCentavos(payment.amountCentavos)}
               </p>
-              <p className="mt-1 text-sm leading-6 text-ink/70">
+              <p className="mt-1 text-[13px] leading-6 text-ink/70">
                 {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)} · Ref{" "}
                 {payment.referenceNo}
               </p>
@@ -101,7 +106,7 @@ async function Payments({
                 <img
                   src={proofUrls.get(payment.id)}
                   alt="Proof of payment"
-                  className="mt-3 max-h-56 w-full rounded-2xl object-contain bg-mist"
+                  className="mt-3 max-h-56 w-full rounded-lg object-contain bg-[#fafcfc]"
                 />
               ) : null}
               <div className="mt-4 flex flex-col gap-3">
@@ -117,44 +122,50 @@ async function Payments({
           ))}
         </ul>
       )}
-      <section className="rounded-3xl bg-white p-4">
-        <h2 className="font-heading text-lg font-semibold">Recent payments</h2>
+      <section>
+        <h2 className="mb-2 text-[13px] font-medium text-ink">Recent payments</h2>
         {payments.length === 0 ? (
-          <div className="mt-2">
-            <ListEmpty>{LIST_COPY.paymentsEmpty}</ListEmpty>
-          </div>
+          <ListEmpty>{LIST_COPY.paymentsEmpty}</ListEmpty>
         ) : (
-          <ul className="mt-2 flex flex-col">
+          <DataTable
+            caption="Recent payments"
+            headers={[
+              { label: "Unit" },
+              { label: "Method" },
+              { label: "Status" },
+              { label: "Amount" },
+              { label: "Acknowledgment" },
+            ]}
+          >
             {payments.map((payment) => (
-              <li key={payment.id} className="border-t border-border py-3 first:border-t-0">
-                <div className="flex items-start justify-between gap-3">
-                  <span>
-                    <span className="block font-medium">{labels.get(payment.unitId)}</span>
-                    <span className="block text-sm text-ink/60">
-                      {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
-                    </span>
-                    {payment.status === "approved" ? (
-                      <Link
-                        href={`/admin/acknowledgments?payment=${payment.id}`}
-                        className="mt-1 inline-block text-sm font-semibold text-teal-deep"
-                      >
-                        Open acknowledgment
-                      </Link>
-                    ) : null}
-                  </span>
-                  <span className="shrink-0 text-right">
-                    <StatusWithSample status={payment.status} sample={sample} />
-                    <span className="mt-1 block text-sm">{formatCentavos(payment.amountCentavos)}</span>
-                  </span>
-                </div>
-                {payment.status === "rejected" && payment.rejectionReason ? (
-                  <p className="mt-2 w-full text-sm text-destructive">
-                    {payment.rejectionReason}
-                  </p>
-                ) : null}
-              </li>
+              <DataRow key={payment.id}>
+                <td className="px-3 py-2.5">
+                  <span className="block font-medium">{labels.get(payment.unitId)}</span>
+                  <span className="block text-[12px] text-ink/50">{formatShortDay(payment.paidAt)}</span>
+                  {payment.status === "rejected" && payment.rejectionReason ? (
+                    <p className="mt-1 text-[12px] text-destructive">{payment.rejectionReason}</p>
+                  ) : null}
+                </td>
+                <td className="px-3 py-2.5 text-ink/70">{methodLabel(payment.method)}</td>
+                <td className="px-3 py-2.5">
+                  <StatusWithSample status={payment.status} sample={sample} />
+                </td>
+                <td className="px-3 py-2.5">{formatCentavos(payment.amountCentavos)}</td>
+                <td className="px-3 py-2.5">
+                  {payment.status === "approved" ? (
+                    <Link
+                      href={`/admin/acknowledgments?payment=${payment.id}`}
+                      className="font-semibold text-teal-deep"
+                    >
+                      Open acknowledgment
+                    </Link>
+                  ) : (
+                    <span className="text-ink/35">—</span>
+                  )}
+                </td>
+              </DataRow>
             ))}
-          </ul>
+          </DataTable>
         )}
       </section>
     </div>

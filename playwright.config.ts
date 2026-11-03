@@ -30,6 +30,7 @@ export default defineConfig({
         "**/day6-screens.spec.ts",
         "**/uma-review-3-screens.spec.ts",
         "**/uma-review-4-screens.spec.ts",
+        "**/v3-reference-screens.spec.ts",
       ],
       use: { baseURL: "http://127.0.0.1:43119" },
     },
