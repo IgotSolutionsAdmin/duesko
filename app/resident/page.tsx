@@ -3,8 +3,7 @@ import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { Shell } from "@/components/shell";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
-import { formatCentavos, monthlyDuesCentavos } from "@/lib/money";
-import type { Unit } from "@/lib/types";
+import { describeMonthlyDues } from "@/lib/money";
 
 export const metadata = {
   title: "Your account",
@@ -20,15 +19,6 @@ export default function ResidentPage() {
       </Suspense>
     </Shell>
   );
-}
-
-function rateLine(unit: Unit): string {
-  const monthly = formatCentavos(monthlyDuesCentavos(unit));
-  if (unit.rateType === "flat") {
-    return `Flat rate · ${monthly} a month`;
-  }
-  const area = unit.areaSqm ?? 0;
-  return `${formatCentavos(unit.rateCentavos)} per sqm × ${area} sqm · ${monthly} a month`;
 }
 
 async function ResidentHome() {
@@ -77,7 +67,9 @@ async function ResidentHome() {
               <h2 className="mt-1 font-heading text-2xl font-semibold text-ink">
                 {unit.label}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-ink/80">{rateLine(unit)}</p>
+              <p className="mt-2 text-sm leading-6 text-ink/80">
+                {describeMonthlyDues(unit)}
+              </p>
             </section>
           ))}
         </div>

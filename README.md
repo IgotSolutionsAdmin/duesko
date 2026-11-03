@@ -1,8 +1,8 @@
 # DuesKo
 
-DuesKo is a dues collection app for Philippine homeowners' associations. A resident sees only their own unit. An admin treasurer sees every unit and who has paid. Money is stored as integer centavos.
+DuesKo is a dues collection app for Philippine homeowners' associations. A resident sees only their own unit. An admin treasurer sees every unit and who has paid. Money is stored as integer centavos and shown as Philippine pesos.
 
-This repository is the Day 1 skeleton: the app shell, a mock sign-in, and the database migration. Supabase is not connected yet.
+Day 2 is HOA setup and units on the mock repository: a required registered name, and units that are either a flat monthly amount or a per-sqm rate times floor area. Supabase is not connected yet.
 
 ## Run locally
 
@@ -25,7 +25,8 @@ Demo sign-in has no password. It is marked **DEV ONLY** and sets a cookie for on
 - `npm run dev` — app at port 43117
 - `npm run build` — production build
 - `npm run lint` — ESLint
-- `npm test` — mock repository access check
+- `npm test` — dues math and mock repository access
+- `npm run test:e2e` — headless Playwright against the mock repository
 
 ## Environment variables
 
@@ -41,7 +42,7 @@ The dashboard may label the public key "anon public" or "publishable". Put that 
 
 ## Data layer
 
-`DuesRepository` in `lib/repository.ts` is the seam. `getRepository()` in `lib/get-repository.ts` returns an in-memory repository over `lib/mock/seed.json`. A resident id returns only that resident's unit. An admin treasurer id returns every unit in the HOA.
+`DuesRepository` in `lib/repository.ts` is the seam. `getRepository()` in `lib/get-repository.ts` returns an in-memory repository over `lib/mock/seed.json`. A resident id returns only that resident's unit. An admin treasurer id returns every unit in the HOA, and can save the registered name and add or edit units. There are no Supabase keys in this step.
 
 The SQL for the same rules is `supabase/migrations/20261102120000_v3_initial.sql`. Tables: `hoas` (`registered_name`), `units` (flat or per-sqm rate), `users` (`admin_treasurer` or `resident`), `charges` (dues and special assessments), `payments` (PayMongo or manual cash, optional `hoa_reference_no`), and `payment_links`. Amounts are integer centavos. `users.id` references `auth.users`.
 
@@ -56,9 +57,8 @@ After that, the next code change replaces `getRepository()` with a Supabase impl
 
 ## Next steps
 
-Later days, not in this skeleton:
+Later days:
 
-- HOA setup and units, including flat and per-sqm amounts
 - Monthly dues and one-off special assessments
 - PayMongo checkout with the HOA's own test keys, and an idempotent webhook
 - Manual cash with the optional HOA reference number, and the payment acknowledgment label

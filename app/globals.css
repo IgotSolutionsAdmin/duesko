@@ -140,3 +140,13 @@
     font-family: var(--font-heading), sans-serif;
   }
 }
+
+/* Shown only while the per-sqm rate is selected. No client script required. */
+.unit-area {
+  display: none;
+}
+
+form:has(input[name="rateType"][value="per_sqm"]:checked) .unit-area {
+  display: flex;
+  flex-direction: column;
+}

@@ -23,6 +23,14 @@ export interface Unit {
   rateCentavos: number;
 }
 
+/** Fields an admin treasurer sends when adding or editing a unit. */
+export interface UnitDraft {
+  label: string;
+  areaSqm: number | null;
+  rateType: RateType;
+  rateCentavos: number;
+}
+
 export interface AppUser {
   id: string;
   hoaId: string;

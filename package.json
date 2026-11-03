@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 43117",
     "lint": "eslint",
-    "test": "node --import tsx --test tests/memory-repository.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test --reporter=list"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -22,6 +23,7 @@
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

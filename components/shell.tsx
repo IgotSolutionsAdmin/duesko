@@ -15,7 +15,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </p>
         </div>
         <p className="mt-6 text-xs tracking-wide text-white/60 md:mt-0">
-          Day 1 skeleton · demo data
+          Day 2 · HOA setup · demo data
         </p>
       </header>
       <main className="px-5 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:px-10 md:py-10">
