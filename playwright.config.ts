@@ -33,10 +33,10 @@ export default defineConfig({
     },
     {
       command:
-        "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next dev --hostname 0.0.0.0 --port 43118",
+        "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next build && NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next start --hostname 0.0.0.0 --port 43118",
       url: "http://127.0.0.1:43118",
       reuseExistingServer: false,
-      timeout: 120_000,
+      timeout: 180_000,
     },
   ],
 });

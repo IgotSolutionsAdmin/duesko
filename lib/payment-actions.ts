@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "./auth";
 import { getRepository } from "./get-repository";
-import { parseManualPayment, parseProofSubmission } from "./payments";
+import { parseManualPayment, parseProofSubmission, rejectReasonError } from "./payments";
 
 function fail(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -47,6 +47,8 @@ export async function rejectProof(formData: FormData) {
   const user = await requireRole("admin_treasurer");
   const paymentId = String(formData.get("paymentId") ?? "");
   const reason = String(formData.get("reason") ?? "");
+  const reasonError = rejectReasonError(reason);
+  if (reasonError) fail("/admin/payments", reasonError);
   const result = await getRepository().rejectPayment(user.id, paymentId, reason);
   if (!result.ok) fail("/admin/payments", result.message);
   revalidatePath("/admin/payments");

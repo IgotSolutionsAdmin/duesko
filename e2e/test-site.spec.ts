@@ -2,7 +2,10 @@ import { expect, test } from "@playwright/test";
 
 const banner = "TEST SITE - sample data only, not for real payments";
 
-test("test site shows the banner and both passwordless demo logins", async ({ page }) => {
+test("production test site keeps the banner and rejects passwordless demo login", async ({
+  page,
+  request,
+}) => {
   await page.goto("/");
   const status = page.getByRole("status");
   await expect(status).toHaveText(banner);
@@ -10,19 +13,29 @@ test("test site shows the banner and both passwordless demo logins", async ({ pa
 
   await page.goto("/admin/login");
   await expect(page.getByRole("status")).toHaveText(banner);
-  await page.getByRole("button", { name: "Sign in as demo admin (Ana Reyes)" }).click();
-  await page.waitForURL(/\/admin$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Ana");
-  await expect(page.getByRole("status")).toHaveText(banner);
+  await expect(page.getByRole("heading", { name: "Officer sign in" })).toBeVisible();
+  await expect(page.getByText("DEV ONLY")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Sign in as demo/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sign in as Ana Reyes" })).toHaveCount(0);
+  await expect(page.getByText("Production sign-in uses Supabase Auth only.")).toBeVisible();
 
-  await page.context().clearCookies();
   await page.goto("/resident/login");
   await expect(page.getByRole("status")).toHaveText(banner);
-  await expect(
-    page.getByRole("button", { name: "Sign in as demo admin (Ana Reyes)" }),
-  ).toHaveCount(0);
-  await page.getByRole("button", { name: "Sign in as demo resident (Juan dela Cruz)" }).click();
-  await page.waitForURL(/\/resident$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Juan");
-  await expect(page.getByRole("status")).toHaveText(banner);
+  await expect(page.getByText("DEV ONLY")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Sign in as demo/ })).toHaveCount(0);
+
+  expect((await request.post("/dev/session")).status()).toBe(404);
+  expect((await request.get("/dev/session")).status()).toBe(404);
+  expect((await request.post("/dev/reset")).status()).toBe(404);
+
+  await page.context().addCookies([
+    {
+      name: "duesko_demo_user",
+      value: "33333333-3333-4333-8333-333333333301",
+      url: "http://127.0.0.1:43118",
+    },
+  ]);
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/admin\/login/);
+  await expect(page.getByText("DEV ONLY")).toHaveCount(0);
 });

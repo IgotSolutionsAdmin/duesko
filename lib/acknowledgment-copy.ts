@@ -22,7 +22,14 @@ export function formatAcknowledgmentAmount(centavos: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `PHP ${pesos}`;
+  return `₱${pesos}`;
+}
+
+/** Avoid "Inc.." when a registered name already ends with a period. */
+export function withTerminalPeriod(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 }
 
 export function formatAcknowledgmentWhen(iso: string): string {
@@ -78,13 +85,13 @@ export function acknowledgmentFields(input: {
 export function renderAcknowledgmentText(fields: AcknowledgmentFields): string {
   return [
     ACKNOWLEDGMENT_HEADER,
-    `This is a system-generated record that ${fields.hoaName} has recorded the payment below from ${fields.residentName}, ${fields.unitLabel}.`,
+    `This is a system-generated record that ${fields.hoaName} has recorded the payment below from ${fields.residentName}, ${withTerminalPeriod(fields.unitLabel)}`,
     `Amount: ${fields.amount}`,
     `For: ${fields.periodOrDescription}`,
     `Payment method: ${fields.method}`,
     `Recorded by: ${fields.officerLine} on ${fields.dateTime}`,
     `Reference no.: ${fields.dueskoReference}`,
-    `This acknowledgment is issued by ${fields.hoaName}. DuesKo only provides the recording software and does not receive or hold HOA funds. For questions about this payment, contact your HOA.`,
+    `This acknowledgment is issued by ${withTerminalPeriod(fields.hoaName)} DuesKo only provides the recording software and does not receive or hold HOA funds. For questions about this payment, contact your HOA.`,
     ACKNOWLEDGMENT_FOOTER,
   ].join("\n");
 }

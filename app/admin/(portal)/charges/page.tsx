@@ -30,8 +30,10 @@ async function Charges() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-3">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">Charges</h1>
-        {useMockRepository() ? <SampleBadge /> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">Charges</h1>
+          {useMockRepository() ? <SampleBadge /> : null}
+        </div>
         <Link
           href="/admin/charges/new"
           className={cn(buttonVariants({ className: "h-11 px-4 text-base" }))}

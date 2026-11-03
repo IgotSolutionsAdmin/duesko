@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { passwordSignInDestination } from "./auth-destination";
+import { isDemoAuthEnabled } from "./demo-auth";
 import { DEMO_COOKIE } from "./demo-cookie";
 import { getRepository } from "./get-repository";
 import { homePath } from "./roles";
@@ -24,9 +25,9 @@ const cookieOptions = {
   maxAge: 60 * 60 * 24 * 14,
 };
 
-/** Signs in as one of the seeded demo users. Only the mock repository uses this. */
+/** Signs in as one of the seeded demo users. Development and the mock repository only. */
 export async function signInAsDemo(formData: FormData) {
-  if (!useMockRepository()) redirect("/");
+  if (!isDemoAuthEnabled() || !useMockRepository()) redirect("/");
 
   const userId = formData.get("userId");
   if (typeof userId !== "string") redirect("/sign-in");

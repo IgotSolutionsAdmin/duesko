@@ -1,5 +1,5 @@
 import { ListEmpty } from "@/components/list-state";
-import { SampleBadge, StatusBadge } from "@/components/status-badge";
+import { StatusWithSample } from "@/components/status-badge";
 import { LIST_COPY } from "@/lib/list-states";
 import { formatCentavos } from "@/lib/money";
 import { useMockRepository } from "@/lib/test-site";
@@ -45,10 +45,7 @@ export function ChargeList({
                 ) : (
                   <span />
                 )}
-                <span className="flex items-center gap-1">
-                  <StatusBadge status={charge.status} />
-                  {sample ? <SampleBadge /> : null}
-                </span>
+                <StatusWithSample status={charge.status} sample={sample} />
               </div>
               <h3 className="mt-1 font-heading text-xl font-semibold text-ink">
                 {charge.description}

@@ -6,7 +6,7 @@ describe("admin portal nav", () => {
   it("lists the officer destinations in order", () => {
     assert.deepEqual(
       ADMIN_NAV_LINKS.map((link) => link.label),
-      ["Dashboard", "Units", "Charges", "Payments/Proofs", "Export"],
+      ["Dashboard", "Units", "Charges", "Payments", "Export"],
     );
     assert.deepEqual(
       ADMIN_NAV_LINKS.map((link) => link.href),

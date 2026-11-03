@@ -47,14 +47,16 @@ async function ExportForm({
           <option value="payments">Payments</option>
         </select>
         <label htmlFor="month" className="text-sm font-medium">
-          Month (optional)
+          Select month
         </label>
         <input
           id="month"
           name="month"
           type="month"
+          aria-label="Select month"
           className="h-12 rounded-2xl border border-border bg-mist px-3 text-base"
         />
+        <p className="text-sm text-ink/60">Optional. Leave blank for all months.</p>
         <label htmlFor="status" className="text-sm font-medium">
           Status (optional)
         </label>
@@ -66,7 +68,7 @@ async function ExportForm({
         >
           <option value="">Any status</option>
           <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
+          <option value="approved">Paid</option>
           <option value="rejected">Rejected</option>
           <option value="paid">Paid</option>
           <option value="unpaid">Unpaid</option>

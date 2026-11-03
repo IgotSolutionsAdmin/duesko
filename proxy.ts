@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { isDemoAuthEnabled } from "./lib/demo-auth";
 import { DEMO_COOKIE } from "./lib/demo-cookie";
 import { DEMO_ROLE_BY_ID } from "./lib/demo-directory";
 import { roleFromUserRows } from "./lib/auth-destination";
@@ -37,7 +38,7 @@ function redirect(request: NextRequest, path: string) {
 }
 
 async function resolveRole(request: NextRequest): Promise<Role | null> {
-  if (useMockRepository()) {
+  if (isDemoAuthEnabled() && useMockRepository()) {
     const demoId = request.cookies.get(DEMO_COOKIE)?.value;
     if (demoId && DEMO_ROLE_BY_ID[demoId]) return DEMO_ROLE_BY_ID[demoId];
     return null;

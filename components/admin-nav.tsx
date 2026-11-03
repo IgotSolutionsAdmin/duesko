@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { Building2, FileDown, LayoutDashboard, Receipt, Wallet } from "lucide-react";
 import { ADMIN_NAV_LINKS, isAdminNavActive } from "@/lib/admin-nav";
 import { signOut } from "@/lib/demo-auth-actions";
+
+const icons = {
+  "/admin": LayoutDashboard,
+  "/admin/units": Building2,
+  "/admin/charges": Receipt,
+  "/admin/payments": Wallet,
+  "/admin/export": FileDown,
+} as const;
 
 export function AdminNav({ hoaName }: { hoaName: string }) {
   const pathname = usePathname();
@@ -69,22 +78,24 @@ export function AdminNav({ hoaName }: { hoaName: string }) {
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2 print:hidden lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white px-2 pt-1 pb-[env(safe-area-inset-bottom)] print:hidden lg:hidden"
         aria-label="Officer"
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5">
           {ADMIN_NAV_LINKS.map((link) => {
             const active = isAdminNavActive(pathname, link.href);
+            const Icon = icons[link.href];
             return (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`flex min-h-11 items-center justify-center px-1 text-center text-[11px] font-medium ${
-                    active ? "text-teal-deep" : "text-ink/45"
+                  className={`flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 text-center text-xs font-medium text-ink ${
+                    active ? "font-semibold" : ""
                   }`}
                   aria-current={active ? "page" : undefined}
                 >
-                  {link.label}
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                  <span>{link.label}</span>
                 </Link>
               </li>
             );
@@ -138,7 +149,7 @@ function NavLinks({
 function SignOutButton() {
   return (
     <form action={signOut}>
-      <input type="hidden" name="portal" value="admin" />
+      <input type="hidden" name="portal" value="admin" suppressHydrationWarning />
       <button
         type="submit"
         className="text-left text-sm font-medium text-ink/70 underline-offset-4 hover:underline"

@@ -1,6 +1,6 @@
 import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { ListEmpty } from "@/components/list-state";
-import { SampleBadge, StatusBadge } from "@/components/status-badge";
+import { SampleBadge, StatusWithSample } from "@/components/status-badge";
 import { requireRole } from "@/lib/auth";
 import { LIST_COPY } from "@/lib/list-states";
 import { firstName } from "@/lib/greeting";
@@ -132,10 +132,7 @@ export default async function AdminDashboard() {
                   <span className="block truncate text-sm text-ink/60">{name}</span>
                 </span>
                 <span className="text-right">
-                  <span className="flex flex-col items-end gap-1">
-                    <StatusBadge status={status} />
-                    {useMockRepository() ? <SampleBadge /> : null}
-                  </span>
+                  <StatusWithSample status={status} sample={useMockRepository()} />
                   <span className="mt-1 block text-sm text-ink/70">
                     {formatCentavos(charge?.amountCentavos ?? 0)}
                   </span>

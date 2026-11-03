@@ -6,6 +6,7 @@ import { PrintButton } from "@/components/print-button";
 import { requireRole } from "@/lib/auth";
 import { loadAcknowledgment } from "@/lib/acknowledgment-view";
 import { getRepository } from "@/lib/get-repository";
+import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Payment acknowledgment" };
 
@@ -39,7 +40,7 @@ async function ResidentAcknowledgment({
         </Link>
         <p className="font-heading text-2xl font-semibold">Payment acknowledgment</p>
       </header>
-      <PaymentAcknowledgment fields={loaded.fields} />
+      <PaymentAcknowledgment fields={loaded.fields} sample={useMockRepository()} />
       <PrintButton />
     </div>
   );

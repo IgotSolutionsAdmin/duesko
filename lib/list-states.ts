@@ -4,7 +4,7 @@ export const LIST_COPY = {
   paymentsEmpty: "No payments yet.",
   proofsEmpty: "No proofs are waiting.",
   duesEmpty: "No dues on this account yet.",
-  acknowledgmentsEmpty: "No approved payments yet.",
+  acknowledgmentsEmpty: "No paid records yet.",
   loadError: "This list could not be loaded.",
 } as const;
 

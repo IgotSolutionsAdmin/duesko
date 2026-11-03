@@ -274,7 +274,7 @@ export function statusLabel(
     case "paid":
       return "Paid";
     case "approved":
-      return "Approved";
+      return "Paid";
     case "pending":
       return "Pending review";
     case "rejected":
@@ -292,6 +292,13 @@ export const STATUS_BADGE_COLORS = {
   pending: "#FFB547",
   approved: "#0E7C7B",
   rejected: "#DC2626",
+  unpaidBg: "transparent",
+  unpaidFg: "#0F2A33",
   sampleBg: "#F4FBFA",
   sampleFg: "#0F2A33",
 } as const;
+
+export function rejectReasonError(reason: string): string | undefined {
+  if (!reason.trim()) return "A reason is required.";
+  return undefined;
+}

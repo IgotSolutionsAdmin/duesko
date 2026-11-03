@@ -93,15 +93,36 @@ for (const viewport of [
       await expect(page.getByTestId("how-to-pay")).toContainText("Bank deposit at BPI");
     });
 
-    test("payments list shows pending, approved, and rejected", async ({ page }) => {
+    test("payments list shows pending, paid, and rejected", async ({ page }) => {
       await signIn(page, "Ana Reyes");
       await page.goto("/admin/payments");
       await expect(page.getByText("Pending review").first()).toBeVisible();
-      await expect(page.getByText("Approved").first()).toBeVisible();
+      await expect(page.getByText("Paid").first()).toBeVisible();
       await expect(page.getByText("Rejected").first()).toBeVisible();
       await page.getByRole("button", { name: "Reject" }).first().click();
-      await expect(page.getByTestId("reject-dialog")).toBeVisible();
-      await expect(page.getByLabel("Reason for rejection")).toBeVisible();
+      const dialog = page.getByTestId("reject-dialog");
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByLabel("Reason for rejection")).toBeVisible();
+      await expect(dialog.getByPlaceholder("e.g. Reference number does not match")).toBeVisible();
+      const submit = dialog.getByRole("button", { name: "Reject" });
+      await expect(submit).toBeDisabled();
+      await dialog.getByLabel("Reason for rejection").click();
+      await dialog.getByRole("heading", { name: "Reject this proof" }).click();
+      await expect(dialog.getByRole("alert")).toHaveText("A reason is required.");
+      await dialog.getByLabel("Reason for rejection").fill("Reference number does not match");
+      await expect(submit).toBeEnabled();
+      await expect(submit).toHaveCSS("background-color", "rgb(220, 38, 38)");
+    });
+
+    test("charges title sits beside Sample and export asks to select a month", async ({ page }) => {
+      await signIn(page, "Ana Reyes");
+      await page.goto("/admin/charges");
+      const heading = page.getByRole("heading", { name: "Charges" });
+      await expect(heading).toBeVisible();
+      const header = heading.locator("xpath=ancestor::header[1]");
+      await expect(header.getByText("Sample", { exact: true })).toBeVisible();
+      await page.goto("/admin/export");
+      await expect(page.getByLabel("Select month")).toBeVisible();
     });
   });
 }

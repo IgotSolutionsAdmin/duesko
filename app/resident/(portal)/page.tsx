@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { HowToPayCard } from "@/components/how-to-pay-card";
 import { ListEmpty } from "@/components/list-state";
-import { SampleBadge, StatusBadge } from "@/components/status-badge";
+import { SampleBadge, StatusWithSample } from "@/components/status-badge";
 import { requireRole } from "@/lib/auth";
 import { firstName } from "@/lib/greeting";
 import { getRepository } from "@/lib/get-repository";
@@ -79,12 +79,11 @@ export default async function ResidentHome() {
         {latest ? (
           <div className="mt-3 flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={latest.status} />
-              {sample ? <SampleBadge /> : null}
+              <StatusWithSample status={latest.status} sample={sample} />
             </div>
             <p className="text-sm leading-6 text-ink/70">
               {latest.status === "pending"
-                ? "An officer will review your proof. You will see Approved or Rejected here."
+                ? "An officer will review your proof. You will see Paid or Rejected here."
                 : latest.status === "rejected"
                   ? `Rejected: ${latest.rejectionReason}`
                   : `${methodLabel(latest.method)} · ${formatShortDay(latest.paidAt)}`}
@@ -144,10 +143,7 @@ export default async function ResidentHome() {
                       ) : null}
                     </div>
                     <div className="text-right">
-                      <div className="flex flex-col items-end gap-1">
-                        {proof ? <StatusBadge status={proof.status} /> : <StatusBadge status={status} />}
-                        {sample ? <SampleBadge /> : null}
-                      </div>
+                      <StatusWithSample status={proof ? proof.status : status} sample={sample} />
                       <p className="mt-1 text-sm">{formatCentavos(charge.amountCentavos)}</p>
                     </div>
                   </div>

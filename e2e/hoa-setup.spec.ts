@@ -15,6 +15,7 @@ test("demo sign-in as admin", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Ana");
   await expect(page.getByRole("main").getByText("Villa Esperanza Homeowners Association, Inc.")).toBeVisible();
+  await expect(page.getByText("DEV ONLY", { exact: true })).toBeVisible();
 });
 
 test("HOA setup requires a registered name", async ({ page }) => {

@@ -7,6 +7,7 @@ import {
   acknowledgmentMethodLabel,
   forbiddenAcknowledgmentWords,
   renderAcknowledgmentText,
+  withTerminalPeriod,
 } from "../lib/acknowledgment-copy";
 import { createMemoryRepository } from "../lib/mock/memory-repository";
 import { seed } from "../lib/mock/seed";
@@ -30,7 +31,11 @@ describe("payment acknowledgment", () => {
     const text = renderAcknowledgmentText(fields);
     assert.match(text, new RegExp(ACKNOWLEDGMENT_HEADER));
     assert.match(text, /Villa Esperanza Homeowners Association, Inc\./);
-    assert.match(text, /PHP 1,500\.00/);
+    assert.match(text, /₱1,500\.00/);
+    assert.doesNotMatch(text, /Inc\.\./);
+    assert.match(text, /issued by Villa Esperanza Homeowners Association, Inc\./);
+    assert.equal(withTerminalPeriod("Villa Esperanza Homeowners Association, Inc."), "Villa Esperanza Homeowners Association, Inc.");
+    assert.equal(withTerminalPeriod("Blk 1 Lot 5"), "Blk 1 Lot 5.");
     assert.match(text, /Cash received by officer/);
     assert.match(text, /Ana Reyes, Admin treasurer/);
     assert.match(text, /DK-5555555555554555/);

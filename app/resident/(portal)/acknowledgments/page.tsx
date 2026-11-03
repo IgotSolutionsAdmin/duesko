@@ -26,7 +26,7 @@ export default async function ResidentAcknowledgmentsPage() {
       </header>
       {approved.length === 0 ? (
         <ListEmpty>
-          {`${LIST_COPY.acknowledgmentsEmpty} Approved payments from ${hoa?.registeredName ?? "your association"} will appear here.`}
+          {`${LIST_COPY.acknowledgmentsEmpty} Paid records from ${hoa?.registeredName ?? "your association"} will appear here.`}
         </ListEmpty>
       ) : (
         <ul className="flex flex-col gap-3">

@@ -5,22 +5,31 @@ import {
   canReupload,
   firstProofError,
   proofFieldErrors,
+  rejectReasonError,
   STATUS_BADGE_COLORS,
   statusLabel,
 } from "../lib/payments";
 import type { Payment } from "../lib/types";
 
 describe("day 6 status labels and list states", () => {
-  it("uses Pending review, Approved, Rejected, and Sample labels", () => {
+  it("uses Unpaid, Pending review, Paid, Rejected, and Sample labels", () => {
     assert.equal(statusLabel("pending"), "Pending review");
-    assert.equal(statusLabel("approved"), "Approved");
+    assert.equal(statusLabel("approved"), "Paid");
     assert.equal(statusLabel("rejected"), "Rejected");
     assert.equal(statusLabel("sample"), "Sample");
     assert.equal(statusLabel("paid"), "Paid");
+    assert.equal(statusLabel("unpaid"), "Unpaid");
     assert.equal(STATUS_BADGE_COLORS.pending, "#FFB547");
     assert.equal(STATUS_BADGE_COLORS.approved, "#0E7C7B");
+    assert.equal(STATUS_BADGE_COLORS.unpaidBg, "transparent");
     assert.equal(STATUS_BADGE_COLORS.sampleBg, "#F4FBFA");
     assert.equal(STATUS_BADGE_COLORS.sampleFg, "#0F2A33");
+  });
+
+  it("requires a reject reason before the officer can submit", () => {
+    assert.equal(rejectReasonError(""), "A reason is required.");
+    assert.equal(rejectReasonError("   "), "A reason is required.");
+    assert.equal(rejectReasonError("Reference number does not match"), undefined);
   });
 
   it("shows inline field errors and keeps a selected file invalid until fixed", () => {

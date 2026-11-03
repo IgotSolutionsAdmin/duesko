@@ -36,13 +36,9 @@ for (const viewport of [
       await expect(page.getByRole("heading", { name: /on file/ })).toBeVisible();
       await shot(page, `admin-units-${viewport.suffix}.png`);
 
-      await page.goto("/admin/charges");
-      await expect(page.getByRole("heading", { name: "Charges" })).toBeVisible();
-      await shot(page, `admin-charges-${viewport.suffix}.png`);
-
       await page.goto("/admin/payments");
       await expect(page.getByText("Pending review").first()).toBeVisible();
-      await expect(page.getByText("Approved").first()).toBeVisible();
+      await expect(page.getByText("Paid").first()).toBeVisible();
       await expect(page.getByText("Rejected").first()).toBeVisible();
       await shot(page, `admin-payments-${viewport.suffix}.png`);
 
@@ -51,13 +47,18 @@ for (const viewport of [
       await shot(page, `admin-reject-dialog-${viewport.suffix}.png`);
       await page.getByRole("button", { name: "Cancel" }).click();
 
-      await page.goto("/admin/export");
-      await expect(page.getByRole("heading", { name: "Payments CSV" })).toBeVisible();
-      await shot(page, `admin-export-${viewport.suffix}.png`);
+      await page.goto("/admin/payments?error=This%20list%20could%20not%20be%20loaded.");
+      await expect(page.getByTestId("list-error")).toBeVisible();
+      await shot(page, `admin-payments-error-${viewport.suffix}.png`);
 
       await page.goto("/admin/acknowledgments");
       await expect(page.getByRole("heading", { name: "PAYMENT ACKNOWLEDGMENT", exact: true })).toBeVisible();
       await shot(page, `admin-acknowledgment-${viewport.suffix}.png`);
+
+      await page.goto("/admin/payments");
+      await page.getByRole("button", { name: "Approve" }).click();
+      await expect(page.getByTestId("list-empty")).toBeVisible();
+      await shot(page, `admin-payments-empty-${viewport.suffix}.png`);
 
       await signIn(page, "Juan dela Cruz");
       await expect(page.getByRole("heading", { name: /Hi,/ })).toBeVisible();

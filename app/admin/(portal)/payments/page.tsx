@@ -3,7 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ListEmpty, ListError, ListSkeleton } from "@/components/list-state";
 import { RejectProofDialog } from "@/components/reject-proof-dialog";
-import { SampleBadge, StatusBadge } from "@/components/status-badge";
+import { StatusWithSample } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
@@ -78,8 +78,7 @@ async function Payments({
                 <p className="text-sm font-medium text-teal-deep">
                   {labels.get(payment.unitId) ?? "Unit"}
                 </p>
-                <StatusBadge status="pending" />
-                {sample ? <SampleBadge /> : null}
+                <StatusWithSample status="pending" sample={sample} />
               </div>
               <h2 className="mt-1 font-heading text-xl font-semibold">
                 {chargeNames.get(payment.chargeId) ?? "Charge"}
@@ -102,7 +101,7 @@ async function Payments({
               ) : null}
               <div className="mt-4 flex flex-col gap-3">
                 <form action={approveProof}>
-                  <input type="hidden" name="paymentId" value={payment.id} />
+                  <input type="hidden" name="paymentId" value={payment.id} suppressHydrationWarning />
                   <Button type="submit" className="h-12 w-full text-base">
                     Approve
                   </Button>
@@ -143,10 +142,7 @@ async function Payments({
                   ) : null}
                 </span>
                 <span className="text-right">
-                  <span className="flex flex-col items-end gap-1">
-                    <StatusBadge status={payment.status} />
-                    {sample ? <SampleBadge /> : null}
-                  </span>
+                  <StatusWithSample status={payment.status} sample={sample} />
                   <span className="mt-1 block text-sm">{formatCentavos(payment.amountCentavos)}</span>
                 </span>
               </li>

@@ -20,7 +20,7 @@ async function ResidentFrame({ children }: { children: React.ReactNode }) {
   await requireRole("resident");
   return (
     <div className="min-h-dvh bg-mist text-ink">
-      <main className="mx-auto flex w-full max-w-lg flex-col px-5 py-6 pb-28">
+      <main className="mx-auto flex w-full max-w-lg flex-col px-5 py-6 pb-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom,0px))]">
         {children}
       </main>
       <ResidentNav />

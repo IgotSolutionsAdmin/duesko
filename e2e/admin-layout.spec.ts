@@ -32,7 +32,7 @@ test.describe("officer desktop layout", () => {
     await sidebar.getByRole("link", { name: "Charges" }).click();
     await expect(page).toHaveURL(/\/admin\/charges$/);
 
-    await sidebar.getByRole("link", { name: "Payments/Proofs" }).click();
+    await sidebar.getByRole("link", { name: "Payments" }).click();
     await expect(page).toHaveURL(/\/admin\/payments$/);
 
     await sidebar.getByRole("link", { name: "Export" }).click();
@@ -60,11 +60,16 @@ test.describe("officer mobile layout", () => {
 
     await expect(page.getByRole("complementary", { name: "Officer menu" })).toBeHidden();
     const bar = page.getByRole("navigation", { name: "Officer" }).locator("visible=true");
-    await expect(bar.getByRole("link", { name: "Dashboard" })).toBeVisible();
-    await expect(bar.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    const dashboard = bar.getByRole("link", { name: "Dashboard" });
+    await expect(dashboard).toBeVisible();
+    await expect(dashboard).toHaveAttribute("aria-current", "page");
+    await expect(bar.getByRole("link", { name: "Payments", exact: true })).toBeVisible();
+    await expect(bar.getByRole("link", { name: "Payments/Proofs" })).toHaveCount(0);
+    const box = await dashboard.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(dashboard.locator("span").last()).toHaveCSS("font-size", "12px");
+    await expect(dashboard.locator("span").last()).toHaveCSS("color", "rgb(15, 42, 51)");
+    await expect(bar.locator("svg")).toHaveCount(5);
 
     await bar.getByRole("link", { name: "Units" }).click();
     await expect(page).toHaveURL(/\/admin\/units$/);

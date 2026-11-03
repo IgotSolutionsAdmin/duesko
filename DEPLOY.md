@@ -1,12 +1,12 @@
 # Deploy a public sample site
 
-No accounts are created by this repository. The sample site uses the in-memory mock and two passwordless demo buttons. Set one env var and nothing else.
+No accounts are created by this repository. The sample site can show a test banner. Production sign-in is Supabase Auth only. Passwordless demo buttons are local development only.
 
 `NEXT_PUBLIC_DUESKO_TEST_SITE=true`
 
-That flag shows the test banner and turns on demo sign-in in a production build. Sample edits, including uploaded proof photos, live in the server process memory and reset on a cold start.
+That flag shows the test banner. It does not turn on cookie demo sign-in in a production build. Sample edits, including uploaded proof photos, live in the server process memory and reset on a cold start.
 
-Do not set the Supabase variables for this sample. Do not put secrets in the repo.
+A production deploy that people can sign into needs the public Supabase URL and anon key, plus invited Auth users. The test-site flag alone no longer unlocks passwordless demo buttons. Do not put secrets or the service role key in the repo.
 
 ## Vercel Hobby
 
@@ -17,7 +17,7 @@ Vercel detects Next.js. No `vercel.json` and no extra build command.
 3. Add an environment variable: name `NEXT_PUBLIC_DUESKO_TEST_SITE`, value `true`. Apply it to Production.
 4. Deploy.
 
-Open the deployment URL. Officer sign-in is `/admin/login` (**Sign in as demo admin (Ana Reyes)**). Resident sign-in is `/resident/login` (**Sign in as demo resident (Juan dela Cruz)**).
+Open the deployment URL. Officer sign-in is `/admin/login`. Resident sign-in is `/resident/login`. Both use Supabase Auth (email and password, or a one-time link). The DEV ONLY role switch and demo cookie session are absent.
 
 ## Real accounts on the same project
 

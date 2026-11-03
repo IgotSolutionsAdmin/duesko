@@ -2,7 +2,7 @@ export const ADMIN_NAV_LINKS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/units", label: "Units" },
   { href: "/admin/charges", label: "Charges" },
-  { href: "/admin/payments", label: "Payments/Proofs" },
+  { href: "/admin/payments", label: "Payments" },
   { href: "/admin/export", label: "Export" },
 ] as const;
 

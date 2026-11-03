@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ListEmpty, ListSkeleton } from "@/components/list-state";
 import { ProofUploadForm } from "@/components/proof-upload-form";
-import { SampleBadge, StatusBadge } from "@/components/status-badge";
+import { SampleBadge, StatusWithSample } from "@/components/status-badge";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
 import { DEFAULT_HOW_TO_PAY } from "@/lib/how-to-pay";
@@ -90,10 +90,7 @@ async function ResidentPayments({
                     ) : null}
                   </div>
                   <div className="text-right">
-                    <div className="flex flex-col items-end gap-1">
-                      <StatusBadge status={payment.status} />
-                      {sample ? <SampleBadge /> : null}
-                    </div>
+                    <StatusWithSample status={payment.status} sample={sample} />
                     <p className="mt-1 text-sm">{formatCentavos(payment.amountCentavos)}</p>
                   </div>
                 </div>
