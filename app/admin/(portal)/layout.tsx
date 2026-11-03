@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { AdminNav } from "@/components/admin-nav";
 import { requireRole } from "@/lib/auth";
+import { getRepository } from "@/lib/get-repository";
 
 export default function AdminPortalLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,13 +12,14 @@ export default function AdminPortalLayout({ children }: { children: React.ReactN
 }
 
 async function AdminFrame({ children }: { children: React.ReactNode }) {
-  await requireRole("admin_treasurer");
+  const user = await requireRole("admin_treasurer");
+  const hoa = await getRepository().getHoa(user.id);
   return (
-    <div className="min-h-dvh bg-mist text-ink">
-      <main className="mx-auto flex w-full max-w-lg flex-col px-5 py-6 pb-28">
+    <div className="min-h-dvh bg-mist text-ink lg:flex">
+      <AdminNav hoaName={hoa?.registeredName ?? "Association"} />
+      <main className="mx-auto flex w-full max-w-lg flex-col px-5 py-6 pb-28 lg:max-w-none lg:flex-1 lg:px-10 lg:py-8 lg:pb-8">
         {children}
       </main>
-      <AdminNav />
     </div>
   );
 }

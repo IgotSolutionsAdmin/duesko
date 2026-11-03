@@ -14,13 +14,13 @@ test("demo sign-in as admin", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Ana");
-  await expect(page.getByText("Villa Esperanza Homeowners Association, Inc.")).toBeVisible();
+  await expect(page.getByRole("main").getByText("Villa Esperanza Homeowners Association, Inc.")).toBeVisible();
 });
 
 test("HOA setup requires a registered name", async ({ page }) => {
   await page.goto("/admin/login");
   await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
-  await page.getByRole("link", { name: "More" }).click();
+  await page.getByRole("link", { name: "Villa Esperanza Homeowners Association, Inc." }).first().click();
   const name = field(page, "Registered name");
 
   await name.fill("");
