@@ -1,6 +1,6 @@
 import { duesDescription, monthlyAmountCentavos, parseDueDate, parsePeriod } from "../charges";
 import { issueProofToken } from "./proof-tokens";
-import { proofObjectPath, storedChargeStatus } from "../payments";
+import { hasPendingProof, proofObjectPath, storedChargeStatus } from "../payments";
 import type {
   DuesRepository,
   Failure,
@@ -240,6 +240,20 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
       return { ok: true, value: copy(hoa) };
     },
 
+    async updateHowToPay(userId, howToPay) {
+      const admin = requireAdmin(userId);
+      if (isFailure(admin)) return admin;
+      const text = howToPay.trim().replace(/\s+/g, " ");
+      if (!text) return { ok: false, message: "How to pay is required." };
+      if (text.length > 2000) {
+        return { ok: false, message: "How to pay is too long." };
+      }
+      const hoa = data.hoas.find((row) => row.id === admin.hoaId);
+      if (!hoa) return { ok: false, message: "Association was not found." };
+      hoa.howToPay = text;
+      return { ok: true, value: copy(hoa) };
+    },
+
     async createUnit(userId, draft) {
       const admin = requireAdmin(userId);
       if (isFailure(admin)) return admin;
@@ -311,6 +325,9 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
       if (!charge) return { ok: false, message: "Choose one of your charges." };
       if (storedChargeStatus(charge, data.payments) === "paid") {
         return { ok: false, message: "That charge is already paid." };
+      }
+      if (hasPendingProof(data.payments, charge.id)) {
+        return { ok: false, message: "A proof for this charge is already pending review." };
       }
       const path = proofObjectPath(charge.hoaId, charge.id, input.extension);
       proofBytes.set(path, { bytes: input.bytes, contentType: input.contentType });
@@ -438,15 +455,6 @@ export function createMemoryRepository(data: SeedData): DuesRepository {
       const allowed = visibleUnitIds(user);
       return data.payments
         .filter((payment) => allowed.has(payment.unitId))
-        .map(copy);
-    },
-
-    async listPaymentLinks(userId) {
-      const user = actor(userId);
-      if (!user) return [];
-      const allowed = visibleUnitIds(user);
-      return data.paymentLinks
-        .filter((link) => allowed.has(link.unitId))
         .map(copy);
     },
 

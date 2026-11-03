@@ -41,7 +41,7 @@ function seedSql(): string {
   const hoas = seed.hoas
     .map(
       (hoa) =>
-        `insert into public.hoas (id, registered_name) values ('${hoa.id}', ${sqlText(hoa.registeredName)});`,
+        `insert into public.hoas (id, registered_name, how_to_pay) values ('${hoa.id}', ${sqlText(hoa.registeredName)}, ${sqlText(hoa.howToPay)});`,
     )
     .join("\n");
   const units = seed.units
@@ -65,7 +65,7 @@ function seedSql(): string {
   const payments = seed.payments
     .map(
       (payment) =>
-        `insert into public.payments (id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, hoa_reference_no, recorded_by, status, reviewed_by, reviewed_at) values ('${payment.id}', '${payment.hoaId}', '${payment.chargeId}', '${payment.unitId}', '${payment.method}', ${payment.amountCentavos}, '${payment.paidAt}', ${payment.hoaReferenceNo ? sqlText(payment.hoaReferenceNo) : "null"}, '${payment.recordedBy}', '${payment.status}', '${payment.reviewedBy}', '${payment.reviewedAt}');`,
+        `insert into public.payments (id, hoa_id, charge_id, unit_id, method, amount_centavos, paid_at, hoa_reference_no, recorded_by, status, reviewed_by, reviewed_at, reference_no, rejection_reason, proof_path) values ('${payment.id}', '${payment.hoaId}', '${payment.chargeId}', '${payment.unitId}', '${payment.method}', ${payment.amountCentavos}, '${payment.paidAt}', ${payment.hoaReferenceNo ? sqlText(payment.hoaReferenceNo) : "null"}, ${payment.recordedBy ? `'${payment.recordedBy}'` : "null"}, '${payment.status}', ${payment.reviewedBy ? `'${payment.reviewedBy}'` : "null"}, ${payment.reviewedAt ? `'${payment.reviewedAt}'` : "null"}, ${payment.referenceNo ? sqlText(payment.referenceNo) : "null"}, ${payment.rejectionReason ? sqlText(payment.rejectionReason) : "null"}, ${payment.proofPath ? sqlText(payment.proofPath) : "null"});`,
     )
     .join("\n");
   return [authUsers, hoas, units, users, charges, payments].join("\n");
@@ -142,6 +142,7 @@ grant select, insert on table storage.objects to authenticated;`,
       "supabase/migrations/20261102120000_v3_initial.sql",
       "supabase/migrations/20261103120000_payment_proofs.sql",
       "supabase/migrations/20261103180000_export_and_acknowledgments.sql",
+      "supabase/migrations/20261103210000_how_to_pay.sql",
     ]) {
       execFileSync(
         "sudo",
@@ -204,8 +205,11 @@ end $$;
 rollback;`,
     );
 
-    assert.equal(asUser(resident.id, "select count(*) from public.payments;"), "0");
-    assert.equal(asUser(admin.id, "select count(*) from public.payments;"), "1");
+    assert.equal(
+      asUser(resident.id, "select count(*) from public.payments;"),
+      String(seed.payments.filter((payment) => payment.unitId === resident.unitId).length),
+    );
+    assert.equal(asUser(admin.id, "select count(*) from public.payments;"), String(seed.payments.length));
     assert.equal(asUser(resident.id, "select count(*) from public.export_audit_log;"), "0");
     psql(
       database,

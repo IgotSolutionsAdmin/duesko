@@ -3,7 +3,12 @@ import { describe, it } from "node:test";
 import { createMemoryRepository } from "../lib/mock/memory-repository";
 import { readProofToken, resetProofTokens } from "../lib/mock/proof-tokens";
 import { seed } from "../lib/mock/seed";
-import { parseProofSubmission, sniffImage } from "../lib/payments";
+import {
+  hasPendingProof,
+  parseProofSubmission,
+  sniffProof,
+  statusLabel,
+} from "../lib/payments";
 
 const resident = seed.users.find((user) => user.role === "resident");
 const admin = seed.users.find((user) => user.role === "admin_treasurer");
@@ -38,10 +43,15 @@ function proof(chargeId: string) {
 }
 
 describe("payment proofs", () => {
-  it("recognises png, jpg, and webp bytes and rejects other files", () => {
-    assert.equal(sniffImage(png), "png");
-    assert.equal(sniffImage(Uint8Array.from([0xff, 0xd8, 0xff, 0x00])), "jpg");
-    assert.equal(sniffImage(Uint8Array.from([1, 2, 3, 4])), null);
+  it("recognises png, jpg, and pdf bytes and rejects other files", () => {
+    assert.equal(sniffProof(png), "png");
+    assert.equal(sniffProof(Uint8Array.from([0xff, 0xd8, 0xff, 0x00])), "jpg");
+    assert.equal(sniffProof(Uint8Array.from([0x25, 0x50, 0x44, 0x46, 0x2d])), "pdf");
+    assert.equal(sniffProof(Uint8Array.from([1, 2, 3, 4])), null);
+    assert.equal(
+      sniffProof(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])),
+      null,
+    );
     const tooBig = parseProofSubmission({
       chargeId: ownCharge.id,
       amount: "1",
@@ -121,6 +131,19 @@ describe("payment proofs", () => {
     );
     const mine = await repository.listPayments(resident.id);
     assert.equal(mine.some((payment) => payment.rejectionReason?.includes("does not match")), true);
+  });
+
+  it("blocks a second upload while a proof is pending review", async () => {
+    const repository = createMemoryRepository(structuredClone(seed));
+    const first = await repository.submitProof(resident.id, proof(ownCharge.id));
+    assert.equal(first.ok, true);
+    const second = await repository.submitProof(resident.id, proof(ownCharge.id));
+    assert.equal(second.ok, false);
+    if (!second.ok) {
+      assert.equal(second.message, "A proof for this charge is already pending review.");
+    }
+    const mine = await repository.listPayments(resident.id);
+    assert.equal(hasPendingProof(mine, ownCharge.id), true);
   });
 
   it("records an officer cash payment immediately and blocks another unit's proof", async () => {

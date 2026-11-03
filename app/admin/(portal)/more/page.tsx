@@ -1,19 +1,22 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { HoaNameForm } from "@/components/hoa-name-form";
+import { HowToPayForm } from "@/components/how-to-pay-form";
+import { ListSkeleton } from "@/components/list-state";
 import { requireRole } from "@/lib/auth";
-import { nameErrorMessage } from "@/lib/form-messages";
+import { howToPayErrorMessage, nameErrorMessage } from "@/lib/form-messages";
 import { getRepository } from "@/lib/get-repository";
+import { DEFAULT_HOW_TO_PAY } from "@/lib/how-to-pay";
 
 export const metadata = { title: "More" };
 
 export default function MorePage({
   searchParams,
 }: {
-  searchParams: Promise<{ name?: string }>;
+  searchParams: Promise<{ name?: string; pay?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="text-sm text-ink/70">Loading association…</p>}>
+    <Suspense fallback={<ListSkeleton label="Loading association" />}>
       <More searchParams={searchParams} />
     </Suspense>
   );
@@ -22,9 +25,9 @@ export default function MorePage({
 async function More({
   searchParams,
 }: {
-  searchParams: Promise<{ name?: string }>;
+  searchParams: Promise<{ name?: string; pay?: string }>;
 }) {
-  const nameCode = (await searchParams).name;
+  const query = await searchParams;
   const user = await requireRole("admin_treasurer");
   const hoa = await getRepository().getHoa(user.id);
   const registeredName = hoa?.registeredName ?? "";
@@ -42,7 +45,16 @@ async function More({
         <div className="mt-4">
           <HoaNameForm
             registeredName={registeredName}
-            error={nameErrorMessage(nameCode)}
+            error={nameErrorMessage(query.name)}
+          />
+        </div>
+      </section>
+      <section className="rounded-3xl bg-white p-5">
+        <h2 className="font-heading text-lg font-semibold">How to pay</h2>
+        <div className="mt-4">
+          <HowToPayForm
+            howToPay={hoa?.howToPay ?? DEFAULT_HOW_TO_PAY}
+            error={howToPayErrorMessage(query.pay)}
           />
         </div>
       </section>

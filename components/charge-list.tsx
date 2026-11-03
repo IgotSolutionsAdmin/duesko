@@ -1,4 +1,8 @@
+import { ListEmpty } from "@/components/list-state";
+import { SampleBadge, StatusBadge } from "@/components/status-badge";
+import { LIST_COPY } from "@/lib/list-states";
 import { formatCentavos } from "@/lib/money";
+import { useMockRepository } from "@/lib/test-site";
 import type { Charge, Unit } from "@/lib/types";
 
 export function ChargeList({
@@ -19,14 +23,13 @@ export function ChargeList({
       a.description.localeCompare(b.description) ||
       (labels.get(a.unitId) ?? "").localeCompare(labels.get(b.unitId) ?? ""),
   );
+  const sample = useMockRepository();
 
   return (
     <section aria-label={label} className="flex flex-col gap-3">
       <h2 className="font-heading text-lg font-semibold text-ink">{label}</h2>
       {ordered.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-teal/40 bg-white p-5 text-sm leading-6 text-ink/80">
-          No charges yet.
-        </p>
+        <ListEmpty>{LIST_COPY.chargesEmpty}</ListEmpty>
       ) : (
         <ul className="flex flex-col gap-3">
           {ordered.map((charge) => (
@@ -34,11 +37,19 @@ export function ChargeList({
               key={charge.id}
               className="rounded-2xl border border-border bg-white p-4"
             >
-              {showUnit ? (
-                <p className="text-sm font-medium text-teal-deep">
-                  {labels.get(charge.unitId) ?? "Unit"}
-                </p>
-              ) : null}
+              <div className="flex items-start justify-between gap-2">
+                {showUnit ? (
+                  <p className="text-sm font-medium text-teal-deep">
+                    {labels.get(charge.unitId) ?? "Unit"}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <span className="flex items-center gap-1">
+                  <StatusBadge status={charge.status} />
+                  {sample ? <SampleBadge /> : null}
+                </span>
+              </div>
               <h3 className="mt-1 font-heading text-xl font-semibold text-ink">
                 {charge.description}
               </h3>
@@ -49,8 +60,6 @@ export function ChargeList({
                 {charge.kind === "dues" ? "Monthly dues" : "Special assessment"}
                 {" · "}
                 Due {charge.dueDate}
-                {" · "}
-                {charge.status === "paid" ? "Paid" : "Unpaid"}
               </p>
             </li>
           ))}

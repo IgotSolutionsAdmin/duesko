@@ -6,7 +6,8 @@ import {
   parsePeriod,
 } from "../charges";
 import { createDueskoReference } from "../duesko-reference";
-import { proofObjectPath, storedChargeStatus } from "../payments";
+import { howToPayOrDefault } from "../how-to-pay";
+import { hasPendingProof, proofObjectPath, storedChargeStatus } from "../payments";
 import type { ManualDraft, ProofDraft } from "../payments";
 import type { DuesRepository, Failure, Result } from "../repository";
 import type {
@@ -14,6 +15,7 @@ import type {
   Charge,
   ChargeKind,
   ChargeStatus,
+  Hoa,
   Payment,
   PaymentMethod,
   RateType,
@@ -21,6 +23,20 @@ import type {
   Unit,
   UnitDraft,
 } from "../types";
+
+type HoaRow = {
+  id: string;
+  registered_name: string;
+  how_to_pay?: string | null;
+};
+
+function toHoa(row: HoaRow): Hoa {
+  return {
+    id: row.id,
+    registeredName: row.registered_name,
+    howToPay: howToPayOrDefault(row.how_to_pay),
+  };
+}
 
 type UnitRow = {
   id: string;
@@ -161,11 +177,10 @@ export function createSupabaseRepository(
       if (!sameUser(userId)) return null;
       const { data, error } = await client
         .from("hoas")
-        .select("id, registered_name")
+        .select("id, registered_name, how_to_pay")
         .maybeSingle();
       if (error || !data) return null;
-      const row = data as { id: string; registered_name: string };
-      return { id: row.id, registeredName: row.registered_name };
+      return toHoa(data as HoaRow);
     },
 
     async listUnits(userId) {
@@ -186,16 +201,33 @@ export function createSupabaseRepository(
         .from("hoas")
         .update({ registered_name: name })
         .eq("id", admin.hoaId)
-        .select("id, registered_name")
+        .select("id, registered_name, how_to_pay")
         .maybeSingle();
       if (error || !data) {
         return { ok: false, message: "Could not save the association name." };
       }
-      const row = data as { id: string; registered_name: string };
-      return {
-        ok: true,
-        value: { id: row.id, registeredName: row.registered_name },
-      };
+      return { ok: true, value: toHoa(data as HoaRow) };
+    },
+
+    async updateHowToPay(userId, howToPay) {
+      if (!sameUser(userId)) return denied();
+      const admin = await requireAdmin();
+      if (isFailure(admin)) return admin;
+      const text = howToPay.trim().replace(/\s+/g, " ");
+      if (!text) return { ok: false, message: "How to pay is required." };
+      if (text.length > 2000) {
+        return { ok: false, message: "How to pay is too long." };
+      }
+      const { data, error } = await client
+        .from("hoas")
+        .update({ how_to_pay: text })
+        .eq("id", admin.hoaId)
+        .select("id, registered_name, how_to_pay")
+        .maybeSingle();
+      if (error || !data) {
+        return { ok: false, message: "Could not save how to pay." };
+      }
+      return { ok: true, value: toHoa(data as HoaRow) };
     },
 
     async createUnit(userId, draft) {
@@ -359,6 +391,9 @@ export function createSupabaseRepository(
       if (storedChargeStatus(charge, payments) === "paid") {
         return { ok: false, message: "That charge is already paid." };
       }
+      if (hasPendingProof(payments, charge.id)) {
+        return { ok: false, message: "A proof for this charge is already pending review." };
+      }
       const path = proofObjectPath(charge.hoaId, charge.id, input.extension);
       const uploaded = await client.storage
         .from("payment-proofs")
@@ -496,29 +531,6 @@ export function createSupabaseRepository(
       const { data, error } = await client.from("payments").select(PAYMENT_COLUMNS);
       if (error || !data) return [];
       return (data as PaymentRow[]).map(toPayment);
-    },
-
-    async listPaymentLinks(userId) {
-      if (!sameUser(userId)) return [];
-      const { data, error } = await client
-        .from("payment_links")
-        .select("id, hoa_id, charge_id, unit_id, token");
-      if (error || !data) return [];
-      return (
-        data as {
-          id: string;
-          hoa_id: string;
-          charge_id: string;
-          unit_id: string;
-          token: string;
-        }[]
-      ).map((row) => ({
-        id: row.id,
-        hoaId: row.hoa_id,
-        chargeId: row.charge_id,
-        unitId: row.unit_id,
-        token: row.token,
-      }));
     },
 
     async listUsers(userId) {

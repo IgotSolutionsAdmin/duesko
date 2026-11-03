@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { ListEmpty, ListSkeleton } from "@/components/list-state";
 import { PaymentAcknowledgment } from "@/components/payment-acknowledgment";
+import { LIST_COPY } from "@/lib/list-states";
 import { PrintButton } from "@/components/print-button";
 import { requireRole } from "@/lib/auth";
 import { loadAcknowledgment } from "@/lib/acknowledgment-view";
@@ -15,7 +17,7 @@ export default function AcknowledgmentsPage({
   searchParams: Promise<{ payment?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="text-sm text-ink/70">Loading acknowledgments…</p>}>
+    <Suspense fallback={<ListSkeleton label="Loading acknowledgments" />}>
       <Acknowledgments searchParams={searchParams} />
     </Suspense>
   );
@@ -50,7 +52,7 @@ async function Acknowledgments({
           <PrintButton />
         </div>
       ) : (
-        <p className="rounded-3xl bg-white p-5 text-sm text-ink/70">No approved payments yet.</p>
+        <ListEmpty>{LIST_COPY.acknowledgmentsEmpty}</ListEmpty>
       )}
       <ul className="flex flex-col gap-2 print:hidden">
         {payments.map((row) => (

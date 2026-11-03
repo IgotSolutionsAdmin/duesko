@@ -52,13 +52,11 @@ describe("memory repository", () => {
   it("hides another unit's charges and payments from the resident", async () => {
     const charges = await repository.listCharges(resident.id);
     const payments = await repository.listPayments(resident.id);
-    const links = await repository.listPaymentLinks(resident.id);
     const people = await repository.listUsers(resident.id);
 
     assert.ok(charges.length > 0);
     assert.ok(charges.every((charge) => charge.unitId === residentUnitId));
     assert.ok(payments.every((payment) => payment.unitId === residentUnitId));
-    assert.ok(links.every((link) => link.unitId === residentUnitId));
     assert.deepEqual(
       people.map((person) => person.id),
       [resident.id],

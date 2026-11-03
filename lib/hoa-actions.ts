@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "./auth";
-import { nameErrorCode, unitErrorCode } from "./form-messages";
+import { howToPayErrorCode, nameErrorCode, unitErrorCode } from "./form-messages";
 import { getRepository } from "./get-repository";
+import { parseHowToPay } from "./how-to-pay";
 import { parseRegisteredName } from "./registered-name";
 import { parseUnitForm } from "./unit-form";
 
@@ -19,6 +20,21 @@ export async function saveRegisteredName(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/more");
   revalidatePath("/resident");
+  redirect("/admin/more");
+}
+
+export async function saveHowToPay(formData: FormData) {
+  const user = await requireRole("admin_treasurer");
+  const parsed = parseHowToPay(String(formData.get("howToPay") ?? ""));
+  if (!parsed.ok) redirect(`/admin/more?pay=${howToPayErrorCode(parsed.message)}`);
+
+  const result = await getRepository().updateHowToPay(user.id, parsed.value);
+  if (!result.ok) redirect(`/admin/more?pay=${howToPayErrorCode(result.message)}`);
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/more");
+  revalidatePath("/resident");
+  revalidatePath("/resident/payments");
   redirect("/admin/more");
 }
 

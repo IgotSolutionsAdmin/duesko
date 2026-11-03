@@ -1,11 +1,20 @@
 import Link from "next/link";
 import { DevRoleSwitch } from "@/components/dev-role-switch";
-import { StatusPill } from "@/components/status-pill";
+import { HowToPayCard } from "@/components/how-to-pay-card";
+import { ListEmpty } from "@/components/list-state";
+import { SampleBadge, StatusBadge } from "@/components/status-badge";
 import { requireRole } from "@/lib/auth";
 import { firstName } from "@/lib/greeting";
 import { getRepository } from "@/lib/get-repository";
+import { LIST_COPY } from "@/lib/list-states";
 import { describeMonthlyDues, formatCentavos, formatShortDay } from "@/lib/money";
-import { approvedCentavos, chargeBalanceStatus, methodLabel } from "@/lib/payments";
+import {
+  approvedCentavos,
+  canReupload,
+  chargeBalanceStatus,
+  latestProof,
+  methodLabel,
+} from "@/lib/payments";
 import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Your account" };
@@ -25,6 +34,8 @@ export default async function ResidentHome() {
     return sum + Math.max(0, charge.amountCentavos - covered);
   }, 0);
   const openCharge = charges.find((charge) => chargeBalanceStatus(charge, payments) !== "paid");
+  const latest = latestProof(payments);
+  const sample = useMockRepository();
 
   return (
     <div className="flex flex-col gap-5">
@@ -37,7 +48,7 @@ export default async function ResidentHome() {
             {hoa?.registeredName}
           </p>
         </div>
-        <span className="mt-1 h-3 w-16 rounded-full bg-teal-deep" aria-hidden />
+        {sample ? <SampleBadge /> : <span className="mt-1 h-3 w-16 rounded-full bg-teal-deep" aria-hidden />}
       </header>
 
       <section className="rounded-3xl bg-teal-deep p-5 text-white">
@@ -63,46 +74,95 @@ export default async function ResidentHome() {
         )}
       </section>
 
+      <section className="rounded-3xl bg-white p-4" aria-label="Latest submission">
+        <h2 className="font-heading text-lg font-semibold">Latest submission</h2>
+        {latest ? (
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={latest.status} />
+              {sample ? <SampleBadge /> : null}
+            </div>
+            <p className="text-sm leading-6 text-ink/70">
+              {latest.status === "pending"
+                ? "An officer will review your proof. You will see Approved or Rejected here."
+                : latest.status === "rejected"
+                  ? `Rejected: ${latest.rejectionReason}`
+                  : `${methodLabel(latest.method)} · ${formatShortDay(latest.paidAt)}`}
+            </p>
+            {canReupload(latest) ? (
+              <Link
+                href={`/resident/payments?charge=${latest.chargeId}&reupload=1`}
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-teal-deep"
+              >
+                Re-upload
+              </Link>
+            ) : null}
+          </div>
+        ) : (
+          <div className="mt-3">
+            <ListEmpty>No proofs uploaded yet.</ListEmpty>
+          </div>
+        )}
+      </section>
+
       <section className="rounded-3xl bg-white p-4" aria-label="My dues and payments">
         <h2 className="font-heading text-lg font-semibold">My dues & payments</h2>
-        <ul className="mt-2">
-          {charges.map((charge) => {
-            const status = chargeBalanceStatus(charge, payments);
-            const latest = payments
-              .filter((payment) => payment.chargeId === charge.id && payment.status === "approved")
-              .sort((a, b) => b.paidAt.localeCompare(a.paidAt))[0];
-            const rejected = payments.find(
-              (payment) => payment.chargeId === charge.id && payment.status === "rejected",
-            );
-            return (
-              <li key={charge.id} className="border-t border-border py-3 first:border-t-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-medium">{charge.description}</h3>
-                    <p className="text-sm text-ink/60">
-                      {status === "paid" && latest
-                        ? `Paid ${formatShortDay(latest.paidAt)} · ${methodLabel(latest.method)}`
-                        : `Due ${formatShortDay(charge.dueDate)}`}
-                    </p>
-                    {rejected?.rejectionReason ? (
-                      <p className="mt-1 text-sm text-destructive">
-                        Rejected: {rejected.rejectionReason}
+        {charges.length === 0 ? (
+          <div className="mt-3">
+            <ListEmpty>{LIST_COPY.duesEmpty}</ListEmpty>
+          </div>
+        ) : (
+          <ul className="mt-2">
+            {charges.map((charge) => {
+              const status = chargeBalanceStatus(charge, payments);
+              const approved = payments
+                .filter((payment) => payment.chargeId === charge.id && payment.status === "approved")
+                .sort((a, b) => b.paidAt.localeCompare(a.paidAt))[0];
+              const proof = latestProof(payments, charge.id);
+              return (
+                <li key={charge.id} className="border-t border-border py-3 first:border-t-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-medium">{charge.description}</h3>
+                      <p className="text-sm text-ink/60">
+                        {status === "paid" && approved
+                          ? `Paid ${formatShortDay(approved.paidAt)} · ${methodLabel(approved.method)}`
+                          : `Due ${formatShortDay(charge.dueDate)}`}
                       </p>
-                    ) : null}
+                      {proof?.status === "rejected" && proof.rejectionReason ? (
+                        <p className="mt-1 text-sm text-destructive">
+                          Rejected: {proof.rejectionReason}
+                        </p>
+                      ) : null}
+                      {proof && canReupload(proof) ? (
+                        <Link
+                          href={`/resident/payments?charge=${charge.id}&reupload=1`}
+                          className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-teal-deep"
+                        >
+                          Re-upload
+                        </Link>
+                      ) : null}
+                    </div>
+                    <div className="text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        {proof ? <StatusBadge status={proof.status} /> : <StatusBadge status={status} />}
+                        {sample ? <SampleBadge /> : null}
+                      </div>
+                      <p className="mt-1 text-sm">{formatCentavos(charge.amountCentavos)}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <StatusPill status={status} />
-                    <p className="mt-1 text-sm">{formatCentavos(charge.amountCentavos)}</p>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         <Link href="/resident/acknowledgments" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-teal-deep">
           View payment acknowledgments ›
         </Link>
       </section>
+
+      <HowToPayCard howToPay={hoa?.howToPay} />
+
       {useMockRepository() ? (
         <DevRoleSwitch currentUserId={user.id} portal="resident" />
       ) : null}

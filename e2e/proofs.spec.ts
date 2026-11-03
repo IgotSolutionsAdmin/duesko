@@ -30,12 +30,13 @@ async function uploadProof(page: Page, reference: string) {
     buffer: png,
   });
   await page.getByRole("button", { name: "Upload proof of payment" }).click();
+  await expect(page.locator('[data-status="pending"]').first()).toBeVisible();
 }
 
 test("resident uploads proof and the officer approves it", async ({ page }) => {
   await signIn(page, "Juan dela Cruz");
   await uploadProof(page, "GC-APPROVE");
-  await expect(page.getByText("Pending")).toBeVisible();
+  await expect(page.locator('[data-status="pending"]').first()).toBeVisible();
 
   await signIn(page, "Ana Reyes");
   await page.goto("/admin/payments");
@@ -46,8 +47,9 @@ test("resident uploads proof and the officer approves it", async ({ page }) => {
   const image = await page.request.get(src!);
   expect(image.status()).toBe(200);
   expect(image.headers()["content-type"]).toContain("image/png");
-  await page.getByRole("button", { name: "Approve" }).click();
-  await expect(page.getByText("No proofs are waiting")).toBeVisible();
+  const uploaded = page.locator("li").filter({ hasText: "GC-APPROVE" });
+  await uploaded.getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByText("GC-APPROVE")).toHaveCount(0);
 
   await signIn(page, "Juan dela Cruz");
   await expect(page.getByRole("heading", { name: "November 2026 dues" })).toBeVisible();
@@ -59,10 +61,14 @@ test("officer rejects a proof and the resident sees the reason", async ({ page }
   await uploadProof(page, "GC-REJECT");
   await signIn(page, "Ana Reyes");
   await page.goto("/admin/payments");
-  await page.getByLabel("Reason for rejection").fill("Reference number does not match");
-  await page.getByRole("button", { name: "Reject" }).click();
+  const uploaded = page.locator("li").filter({ hasText: "GC-REJECT" }).first();
+  await uploaded.getByRole("button", { name: "Reject" }).click();
+  const dialog = page.getByTestId("reject-dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Reason for rejection").fill("Reference number does not match");
+  await dialog.getByRole("button", { name: "Reject" }).click();
   await signIn(page, "Juan dela Cruz");
-  await expect(page.getByText("Rejected: Reference number does not match")).toBeVisible();
+  await expect(page.getByText("Rejected: Reference number does not match").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "November 2026 dues" })).toBeVisible();
   await expect(page.getByText("Due Nov 5")).toBeVisible();
 });

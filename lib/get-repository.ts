@@ -72,6 +72,11 @@ function createRequestRepository(): DuesRepository {
       if (!repository) return signedOut;
       return repository.updateRegisteredName(userId, registeredName);
     },
+    async updateHowToPay(userId, howToPay) {
+      const repository = await live();
+      if (!repository) return signedOut;
+      return repository.updateHowToPay(userId, howToPay);
+    },
     async createUnit(userId, draft) {
       const repository = await live();
       if (!repository) return signedOut;
@@ -126,11 +131,6 @@ function createRequestRepository(): DuesRepository {
       const repository = await live();
       if (!repository) return [];
       return repository.listPayments(userId);
-    },
-    async listPaymentLinks(userId) {
-      const repository = await live();
-      if (!repository) return [];
-      return repository.listPaymentLinks(userId);
     },
     async listUsers(userId) {
       const repository = await live();

@@ -1,13 +1,17 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
-import { StatusPill } from "@/components/status-pill";
+import { ListEmpty, ListError, ListSkeleton } from "@/components/list-state";
+import { RejectProofDialog } from "@/components/reject-proof-dialog";
+import { SampleBadge, StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
+import { LIST_COPY } from "@/lib/list-states";
 import { formatCentavos, formatShortDay } from "@/lib/money";
-import { approveProof, rejectProof } from "@/lib/payment-actions";
+import { approveProof } from "@/lib/payment-actions";
 import { methodLabel } from "@/lib/payments";
+import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Payments" };
 
@@ -17,7 +21,7 @@ export default function PaymentsPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="text-sm text-ink/70">Loading payments…</p>}>
+    <Suspense fallback={<ListSkeleton rows={4} label="Loading payments" />}>
       <Payments searchParams={searchParams} />
     </Suspense>
   );
@@ -46,6 +50,7 @@ async function Payments({
     const url = await repository.getProofUrl(user.id, payment.id);
     if (url.ok) proofUrls.set(payment.id, url.value);
   }
+  const sample = useMockRepository();
 
   return (
     <div className="flex flex-col gap-5">
@@ -60,22 +65,22 @@ async function Payments({
           Record cash
         </Link>
       </header>
-      {error ? (
-        <p role="alert" className="text-sm leading-6 text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {error ? <ListError message={error} /> : null}
       {pending.length === 0 ? (
-        <p className="rounded-3xl bg-white p-5 text-sm leading-6 text-ink/70">
-          No proofs are waiting. Record a cash or manual payment if the resident paid you directly.
-        </p>
+        <ListEmpty>
+          {`${LIST_COPY.proofsEmpty} Record a cash or manual payment if the resident paid you directly.`}
+        </ListEmpty>
       ) : (
         <ul className="flex flex-col gap-4">
           {pending.map((payment) => (
             <li key={payment.id} className="rounded-3xl bg-white p-4">
-              <p className="text-sm font-medium text-teal-deep">
-                {labels.get(payment.unitId) ?? "Unit"}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-medium text-teal-deep">
+                  {labels.get(payment.unitId) ?? "Unit"}
+                </p>
+                <StatusBadge status="pending" />
+                {sample ? <SampleBadge /> : null}
+              </div>
               <h2 className="mt-1 font-heading text-xl font-semibold">
                 {chargeNames.get(payment.chargeId) ?? "Charge"}
               </h2>
@@ -102,21 +107,7 @@ async function Payments({
                     Approve
                   </Button>
                 </form>
-                <form action={rejectProof} className="flex flex-col gap-2">
-                  <input type="hidden" name="paymentId" value={payment.id} />
-                  <label htmlFor={`reason-${payment.id}`} className="text-sm font-medium">
-                    Reason for rejection
-                  </label>
-                  <input
-                    id={`reason-${payment.id}`}
-                    name="reason"
-                    required
-                    className="h-12 w-full rounded-2xl border border-border px-3 text-base"
-                  />
-                  <Button type="submit" variant="outline" className="h-12 w-full bg-white text-base">
-                    Reject
-                  </Button>
-                </form>
+                <RejectProofDialog paymentId={payment.id} />
               </div>
             </li>
           ))}
@@ -124,30 +115,44 @@ async function Payments({
       )}
       <section className="rounded-3xl bg-white p-4">
         <h2 className="font-heading text-lg font-semibold">Recent payments</h2>
-        <ul className="mt-2 flex flex-col">
-          {payments.slice(0, 8).map((payment) => (
-            <li key={payment.id} className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0">
-              <span>
-                <span className="block font-medium">{labels.get(payment.unitId)}</span>
-                <span className="block text-sm text-ink/60">
-                  {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
+        {payments.length === 0 ? (
+          <div className="mt-2">
+            <ListEmpty>{LIST_COPY.paymentsEmpty}</ListEmpty>
+          </div>
+        ) : (
+          <ul className="mt-2 flex flex-col">
+            {payments.map((payment) => (
+              <li key={payment.id} className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0">
+                <span>
+                  <span className="block font-medium">{labels.get(payment.unitId)}</span>
+                  <span className="block text-sm text-ink/60">
+                    {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
+                  </span>
+                  {payment.status === "rejected" && payment.rejectionReason ? (
+                    <span className="mt-1 block text-sm text-destructive">
+                      {payment.rejectionReason}
+                    </span>
+                  ) : null}
+                  {payment.status === "approved" ? (
+                    <Link
+                      href={`/admin/acknowledgments?payment=${payment.id}`}
+                      className="mt-1 inline-block text-sm font-semibold text-teal-deep"
+                    >
+                      Open acknowledgment
+                    </Link>
+                  ) : null}
                 </span>
-                {payment.status === "approved" ? (
-                  <Link
-                    href={`/admin/acknowledgments?payment=${payment.id}`}
-                    className="mt-1 inline-block text-sm font-semibold text-teal-deep"
-                  >
-                    Open acknowledgment
-                  </Link>
-                ) : null}
-              </span>
-              <span className="text-right">
-                <StatusPill status={payment.status} />
-                <span className="mt-1 block text-sm">{formatCentavos(payment.amountCentavos)}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+                <span className="text-right">
+                  <span className="flex flex-col items-end gap-1">
+                    <StatusBadge status={payment.status} />
+                    {sample ? <SampleBadge /> : null}
+                  </span>
+                  <span className="mt-1 block text-sm">{formatCentavos(payment.amountCentavos)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

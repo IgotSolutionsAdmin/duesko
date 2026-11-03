@@ -1,6 +1,8 @@
 import { DevRoleSwitch } from "@/components/dev-role-switch";
-import { StatusPill } from "@/components/status-pill";
+import { ListEmpty } from "@/components/list-state";
+import { SampleBadge, StatusBadge } from "@/components/status-badge";
 import { requireRole } from "@/lib/auth";
+import { LIST_COPY } from "@/lib/list-states";
 import { firstName } from "@/lib/greeting";
 import { getRepository } from "@/lib/get-repository";
 import { formatCentavos, formatShortDay } from "@/lib/money";
@@ -69,7 +71,7 @@ export default async function AdminDashboard() {
             {hoa?.registeredName ?? "Association"}
           </p>
         </div>
-        <span className="mt-1 h-3 w-16 rounded-full bg-teal-deep" aria-hidden />
+        {useMockRepository() ? <SampleBadge /> : <span className="mt-1 h-3 w-16 rounded-full bg-teal-deep" aria-hidden />}
       </header>
 
       <section className="rounded-3xl bg-teal-deep p-5 text-white">
@@ -109,6 +111,11 @@ export default async function AdminDashboard() {
           <h2 className="font-heading text-lg font-semibold">Units</h2>
           <p className="text-sm text-ink/50">{units.length} total</p>
         </div>
+        {units.length === 0 ? (
+          <div className="mt-3">
+            <ListEmpty>{LIST_COPY.unitsEmpty}</ListEmpty>
+          </div>
+        ) : (
         <ul className="mt-3 flex flex-col">
           {units.map((unit) => {
             const resident = people.find((person) => person.unitId === unit.id);
@@ -125,7 +132,10 @@ export default async function AdminDashboard() {
                   <span className="block truncate text-sm text-ink/60">{name}</span>
                 </span>
                 <span className="text-right">
-                  <StatusPill status={status} />
+                  <span className="flex flex-col items-end gap-1">
+                    <StatusBadge status={status} />
+                    {useMockRepository() ? <SampleBadge /> : null}
+                  </span>
                   <span className="mt-1 block text-sm text-ink/70">
                     {formatCentavos(charge?.amountCentavos ?? 0)}
                   </span>
@@ -134,6 +144,7 @@ export default async function AdminDashboard() {
             );
           })}
         </ul>
+        )}
       </section>
 
       {useMockRepository() ? (

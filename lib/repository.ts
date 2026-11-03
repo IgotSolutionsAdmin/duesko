@@ -5,7 +5,6 @@ import type {
   ExportKind,
   Hoa,
   Payment,
-  PaymentLink,
   Unit,
   UnitDraft,
 } from "./types";
@@ -45,6 +44,7 @@ export interface DuesRepository {
   getHoa(userId: string): Promise<Hoa | null>;
   listUnits(userId: string): Promise<Unit[]>;
   updateRegisteredName(userId: string, registeredName: string): Promise<Result<Hoa>>;
+  updateHowToPay(userId: string, howToPay: string): Promise<Result<Hoa>>;
   createUnit(userId: string, draft: UnitDraft): Promise<Result<Unit>>;
   updateUnit(
     userId: string,
@@ -71,7 +71,6 @@ export interface DuesRepository {
   /** Short-lived URL. Callers must already be allowed to see the payment. */
   getProofUrl(userId: string, paymentId: string): Promise<Result<string>>;
   listPayments(userId: string): Promise<Payment[]>;
-  listPaymentLinks(userId: string): Promise<PaymentLink[]>;
   listUsers(userId: string): Promise<AppUser[]>;
   recordExport(
     userId: string,

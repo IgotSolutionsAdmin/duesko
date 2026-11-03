@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ListEmpty } from "@/components/list-state";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
+import { LIST_COPY } from "@/lib/list-states";
 import { formatCentavos, formatShortDay } from "@/lib/money";
 
 export const metadata = { title: "Acknowledgments" };
@@ -23,9 +25,9 @@ export default async function ResidentAcknowledgmentsPage() {
         <h1 className="font-heading text-2xl font-semibold">Acknowledgments</h1>
       </header>
       {approved.length === 0 ? (
-        <p className="rounded-3xl bg-white p-5 text-sm text-ink/70">
-          Approved payments from {hoa?.registeredName ?? "your association"} will appear here.
-        </p>
+        <ListEmpty>
+          {`${LIST_COPY.acknowledgmentsEmpty} Approved payments from ${hoa?.registeredName ?? "your association"} will appear here.`}
+        </ListEmpty>
       ) : (
         <ul className="flex flex-col gap-3">
           {approved.map((payment) => (

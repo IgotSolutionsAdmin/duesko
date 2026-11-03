@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ListError, ListSkeleton } from "@/components/list-state";
 
 export const metadata = { title: "Export" };
 
@@ -8,7 +9,7 @@ export default function ExportPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="text-sm text-ink/70">Opening export…</p>}>
+    <Suspense fallback={<ListSkeleton label="Loading export" />}>
       <ExportForm searchParams={searchParams} />
     </Suspense>
   );
@@ -30,11 +31,7 @@ async function ExportForm({
         Download units, charges, or payments for this association. Amounts are pesos converted
         from stored centavos. Each download is written to the export audit log.
       </p>
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          That export could not be prepared.
-        </p>
-      ) : null}
+      {error ? <ListError message="That export could not be prepared." /> : null}
       <form action="/admin/export/csv" method="get" className="flex flex-col gap-4 rounded-3xl bg-white p-5">
         <label htmlFor="kind" className="text-sm font-medium">
           What to download

@@ -2,7 +2,8 @@
   "hoas": [
     {
       "id": "11111111-1111-4111-8111-111111111111",
-      "registeredName": "Villa Esperanza Homeowners Association, Inc."
+      "registeredName": "Villa Esperanza Homeowners Association, Inc.",
+      "howToPay": "DuesKo does not process payments. Pay your HOA through its usual channels, then upload your proof here."
     }
   ],
   "units": [
@@ -115,15 +116,46 @@
       "note": null,
       "recordedBy": "33333333-3333-4333-8333-333333333301",
       "dueskoReference": "DK-5555555555554555"
-    }
-  ],
-  "paymentLinks": [
+    },
     {
-      "id": "66666666-6666-4666-8666-666666666601",
+      "id": "55555555-5555-4555-8555-555555555502",
       "hoaId": "11111111-1111-4111-8111-111111111111",
-      "chargeId": "44444444-4444-4444-8444-444444444401",
+      "chargeId": "44444444-4444-4444-8444-444444444402",
       "unitId": "22222222-2222-4222-8222-222222222201",
-      "token": "ve-b1l4-2026-11"
+      "method": "bank_transfer",
+      "amountCentavos": 50000,
+      "paidAt": "2026-11-01T03:00:00.000Z",
+      "providerPaymentId": null,
+      "referenceNo": "SAMPLE-REF-REJ",
+      "hoaReferenceNo": null,
+      "proofPath": "11111111-1111-4111-8111-111111111111/44444444-4444-4444-8444-444444444402/sample-rejected.png",
+      "status": "rejected",
+      "rejectionReason": "Reference number does not match",
+      "reviewedBy": "33333333-3333-4333-8333-333333333301",
+      "reviewedAt": "2026-11-01T04:00:00.000Z",
+      "note": null,
+      "recordedBy": "33333333-3333-4333-8333-333333333302",
+      "dueskoReference": "DK-5555555555554556"
+    },
+    {
+      "id": "55555555-5555-4555-8555-555555555503",
+      "hoaId": "11111111-1111-4111-8111-111111111111",
+      "chargeId": "44444444-4444-4444-8444-444444444404",
+      "unitId": "22222222-2222-4222-8222-222222222203",
+      "method": "bank_transfer",
+      "amountCentavos": 168000,
+      "paidAt": "2026-11-02T08:00:00.000Z",
+      "providerPaymentId": null,
+      "referenceNo": "SAMPLE-REF-PEND",
+      "hoaReferenceNo": null,
+      "proofPath": "11111111-1111-4111-8111-111111111111/44444444-4444-4444-8444-444444444404/sample-pending.png",
+      "status": "pending",
+      "rejectionReason": null,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "note": null,
+      "recordedBy": null,
+      "dueskoReference": "DK-5555555555554557"
     }
   ]
 }

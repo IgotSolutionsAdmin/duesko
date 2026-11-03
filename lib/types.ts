@@ -13,6 +13,7 @@ export type PaymentStatus = "pending" | "approved" | "rejected";
 export interface Hoa {
   id: string;
   registeredName: string;
+  howToPay: string;
 }
 
 export interface Unit {
@@ -76,6 +77,8 @@ export interface Payment {
   dueskoReference: string | null;
 }
 
+export type BadgeStatus = PaymentStatus | "paid" | "unpaid" | "partial" | "sample";
+
 export type ExportKind = "units" | "charges" | "payments";
 
 export interface ExportAudit {
@@ -88,19 +91,10 @@ export interface ExportAudit {
   createdAt: string;
 }
 
-export interface PaymentLink {
-  id: string;
-  hoaId: string;
-  chargeId: string;
-  unitId: string;
-  token: string;
-}
-
 export interface SeedData {
   hoas: Hoa[];
   units: Unit[];
   users: AppUser[];
   charges: Charge[];
   payments: Payment[];
-  paymentLinks: PaymentLink[];
 }

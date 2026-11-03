@@ -38,6 +38,20 @@ export function unitErrorCode(message: string): string {
   }
 }
 
+const howToPayErrors: Record<string, string> = {
+  required: "How to pay is required.",
+  long: "How to pay is too long.",
+};
+
+export function howToPayErrorCode(message: string): string {
+  return message === "How to pay is too long." ? "long" : "required";
+}
+
+export function howToPayErrorMessage(code: string | undefined): string | null {
+  if (!code) return null;
+  return howToPayErrors[code] ?? null;
+}
+
 export function nameErrorMessage(code: string | undefined): string | null {
   if (!code) return null;
   return nameErrors[code] ?? null;
