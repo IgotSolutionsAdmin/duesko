@@ -21,6 +21,8 @@ export default defineConfig({
         "**/day6-screens.spec.ts",
         "**/uma-review-3-screens.spec.ts",
         "**/uma-review-4-screens.spec.ts",
+        "**/landing-screens.spec.ts",
+        "**/waitlist-off.spec.ts",
       ],
       use: { baseURL: "http://127.0.0.1:43117" },
     },
@@ -30,12 +32,13 @@ export default defineConfig({
         "**/day6-screens.spec.ts",
         "**/uma-review-3-screens.spec.ts",
         "**/uma-review-4-screens.spec.ts",
+        "**/landing-screens.spec.ts",
       ],
       use: { baseURL: "http://127.0.0.1:43119" },
     },
     {
       name: "test-site",
-      testMatch: "**/test-site.spec.ts",
+      testMatch: ["**/test-site.spec.ts", "**/waitlist-off.spec.ts"],
       use: { baseURL: "http://127.0.0.1:43118" },
     },
     {
@@ -46,7 +49,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "NEXT_PUBLIC_DUESKO_TEST_SITE=true npm run dev",
+      command: "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_PUBLIC_DUESKO_WAITLIST_OPEN=true npm run dev",
       url: "http://127.0.0.1:43117",
       reuseExistingServer: false,
       timeout: 120_000,

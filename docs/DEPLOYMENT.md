@@ -35,6 +35,7 @@ Apply migrations in **filename sort order** under `supabase/migrations/`:
 | 2 | `20261103120000_payment_proofs.sql` | Payment proof storage and policies |
 | 3 | `20261103180000_export_and_acknowledgments.sql` | Export audit log and acknowledgments |
 | 4 | `20261103210000_how_to_pay.sql` | How-to-pay content |
+| 5 | `20261107120000_waitlist_signups.sql` | Public waitlist signups |
 
 Remote Supabase may record different version timestamps than the repo filenames; match by **migration name** (suffix after the timestamp). All four names above should appear in **Database → Migrations** before calling production healthy.
 
@@ -47,6 +48,7 @@ Set in Vercel → Project → **Settings → Environment Variables** (Production
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Public Supabase API URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Anon / publishable key only |
 | `NEXT_PUBLIC_DUESKO_TEST_SITE` | No | Must **not** be `true` in production (shows “TEST SITE” banner) |
+| `NEXT_PUBLIC_DUESKO_WAITLIST_OPEN` | No | Must **not** be `true` until the privacy notice is approved |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Must not be set** | Bypasses RLS; keep off Vercel. Server code uses it only when explicitly configured locally. |
 
 See also [DEPLOY.md](../DEPLOY.md) for sample-site vs real-auth behavior.
