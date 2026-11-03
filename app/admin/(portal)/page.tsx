@@ -7,6 +7,7 @@ import { firstName } from "@/lib/greeting";
 import { getRepository } from "@/lib/get-repository";
 import { formatCentavos, formatShortDay } from "@/lib/money";
 import { approvedCentavos, chargeBalanceStatus } from "@/lib/payments";
+import { shouldRenderDevRoleSwitch } from "@/lib/demo-auth";
 import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Dashboard" };
@@ -144,7 +145,7 @@ export default async function AdminDashboard() {
         )}
       </section>
 
-      {useMockRepository() ? (
+      {shouldRenderDevRoleSwitch() ? (
         <DevRoleSwitch currentUserId={user.id} portal="admin" />
       ) : null}
     </div>

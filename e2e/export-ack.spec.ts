@@ -57,7 +57,7 @@ test.describe("export and acknowledgment at 390", () => {
     await page.getByRole("navigation", { name: "Officer" }).locator("visible=true").getByRole("link", { name: "Payments", exact: true }).click();
     await page.getByRole("link", { name: "Record cash" }).click();
     await page.getByLabel("Unit").selectOption({ label: "Blk 1 Lot 4 · November 2026 dues" });
-    await page.getByLabel("Amount received (PHP)").fill("1500");
+    await page.getByLabel("Amount", { exact: true }).fill("1500");
     await page.getByLabel("Date received").fill("2026-11-03");
     await page.getByRole("button", { name: "Save & issue acknowledgment" }).click();
     await expect(page.getByRole("heading", { name: "PAYMENT ACKNOWLEDGMENT", exact: true })).toBeVisible();

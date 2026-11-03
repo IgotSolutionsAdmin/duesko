@@ -35,7 +35,6 @@ export default async function UnitsPage() {
             <li key={unit.id} className="rounded-3xl bg-white p-4">
               <div className="flex items-start justify-between gap-2">
                 <h2 className="font-heading text-xl font-semibold">{unit.label}</h2>
-                {sample ? <SampleBadge /> : null}
               </div>
               <p className="mt-2 font-heading text-2xl font-semibold text-teal">
                 {formatCentavos(monthlyDuesCentavos(unit))}

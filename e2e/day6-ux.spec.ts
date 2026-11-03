@@ -37,11 +37,15 @@ for (const viewport of [
       await page.getByRole("link", { name: "Re-upload" }).first().click();
       await expect(page.getByTestId("reupload-banner")).toBeVisible();
       await expect(page.getByTestId("how-to-pay").first()).toContainText(howToPay);
+      await expect(page.locator("#chargeId")).toHaveValue(/.+/);
+      await expect(page.locator("#amount")).toHaveValue(/^\d+\.\d{2}$/);
     });
 
     test("validates the upload inline and keeps the selected file", async ({ page }) => {
       await signIn(page, "Juan dela Cruz");
       await page.goto("/resident/payments");
+      await expect(page.getByRole("button", { name: "Choose photo or PDF" })).toBeVisible();
+      await expect(page.getByText("Enter the amount in pesos, such as 1500.00.")).toHaveCount(0);
       const proof = page.locator("#proof");
       await proof.scrollIntoViewIfNeeded();
       await proof.setInputFiles({
@@ -56,6 +60,7 @@ for (const viewport of [
         .toBe("proof.png");
       await page.getByRole("button", { name: "Upload proof of payment" }).click();
       await expect(page.getByText("Enter the amount in pesos, such as 1500.00.")).toBeVisible();
+      await expect(page.getByText("proof.png")).toBeVisible();
       await expect
         .poll(async () => proof.evaluate((el) => (el as HTMLInputElement).files?.[0]?.name ?? ""))
         .toBe("proof.png");
@@ -64,7 +69,7 @@ for (const viewport of [
     test("blocks a second upload while one is pending review", async ({ page }) => {
       await signIn(page, "Juan dela Cruz");
       await page.getByRole("link", { name: "Upload proof of payment" }).click();
-      await page.getByLabel("Amount (PHP)").fill("1500");
+      await page.getByLabel("Amount", { exact: true }).fill("1500");
       await page.getByLabel("Payment date").fill("2026-11-03");
       await page.getByLabel("Reference no.").fill("GC-PENDING");
       await page.getByLabel("Proof of payment").setInputFiles({
@@ -106,12 +111,24 @@ for (const viewport of [
       await expect(dialog.getByPlaceholder("e.g. Reference number does not match")).toBeVisible();
       const submit = dialog.getByRole("button", { name: "Reject" });
       await expect(submit).toBeDisabled();
-      await dialog.getByLabel("Reason for rejection").click();
-      await dialog.getByRole("heading", { name: "Reject this proof" }).click();
-      await expect(dialog.getByRole("alert")).toHaveText("A reason is required.");
+      await expect(dialog.getByRole("alert")).toHaveCount(0);
       await dialog.getByLabel("Reason for rejection").fill("Reference number does not match");
       await expect(submit).toBeEnabled();
       await expect(submit).toHaveCSS("background-color", "rgb(220, 38, 38)");
+    });
+
+    test("payments error sits in the pending list and units show Sample once", async ({ page }) => {
+      await signIn(page, "Ana Reyes");
+      await page.goto("/admin/payments?error=1");
+      const error = page.getByTestId("list-error");
+      await expect(error).toHaveText(/Couldn't load pending proofs/);
+      await expect(error.getByRole("link", { name: "Retry" })).toBeVisible();
+      await page.goto("/admin/payments");
+      await page.getByRole("button", { name: "Approve" }).click();
+      await expect(page.getByTestId("list-empty").getByRole("link", { name: "Record a cash or manual payment" })).toBeVisible();
+      await page.goto("/admin/units");
+      await expect(page.getByRole("heading", { name: /on file/ })).toBeVisible();
+      await expect(page.getByText("Sample", { exact: true })).toHaveCount(1);
     });
 
     test("charges title sits beside Sample and export asks to select a month", async ({ page }) => {

@@ -17,8 +17,9 @@ async function AdminFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-mist text-ink lg:flex">
       <AdminNav hoaName={hoa?.registeredName ?? "Association"} />
-      <main className="mx-auto flex w-full max-w-lg flex-col px-5 py-6 pb-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom,0px))] lg:max-w-none lg:flex-1 lg:px-10 lg:py-8 lg:pb-8">
+      <main className="portal-main mx-auto flex w-full max-w-lg flex-col px-5 pt-6 lg:max-w-none lg:flex-1 lg:px-10 lg:pt-8">
         {children}
+        <div data-testid="page-end" aria-hidden className="h-px w-full shrink-0" />
       </main>
     </div>
   );

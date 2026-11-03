@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
-import { isDemoAuthEnabled, shouldRenderDevRoleSwitch } from "../lib/demo-auth";
+import { allowDevReset, isDemoAuthEnabled, shouldRenderDevRoleSwitch } from "../lib/demo-auth";
 import nextConfig from "../next.config";
 
 const originals = new Map<string, string | undefined>();
@@ -23,12 +23,16 @@ describe("demo auth production lock", () => {
     stubEnv("NODE_ENV", "development");
     assert.equal(isDemoAuthEnabled(), true);
     assert.equal(shouldRenderDevRoleSwitch(), true);
+    assert.equal(allowDevReset(), true);
   });
 
   it("rejects the panel and demo session routes in production", async () => {
     stubEnv("NODE_ENV", "production");
+    stubEnv("DUESKO_E2E", "");
+    delete process.env.DUESKO_E2E;
     assert.equal(isDemoAuthEnabled(), false);
     assert.equal(shouldRenderDevRoleSwitch(), false);
+    assert.equal(allowDevReset(), false);
 
     const { GET, POST } = await import("../app/dev/session/route");
     assert.equal((await GET()).status, 404);

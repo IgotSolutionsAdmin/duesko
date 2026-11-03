@@ -65,5 +65,9 @@ describe("day 6 status labels and list states", () => {
     assert.equal(listViewState({ count: 2 }), "ready");
     assert.ok(LIST_COPY.unitsEmpty);
     assert.ok(LIST_COPY.proofsEmpty);
+    assert.equal(
+      LIST_COPY.proofsLoadError,
+      "Couldn't load pending proofs. Check your connection and try again.",
+    );
   });
 });

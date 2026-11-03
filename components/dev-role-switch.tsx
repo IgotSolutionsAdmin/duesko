@@ -16,7 +16,10 @@ export function DevRoleSwitch({
   const others = seed.users.filter((user) => user.id !== currentUserId);
 
   return (
-    <section className="rounded-2xl border border-mango bg-mango/25 p-4">
+    <section
+      data-testid="dev-role-switch"
+      className="rounded-2xl border border-mango bg-mango/25 p-4"
+    >
       <p className="font-heading text-xs font-semibold tracking-[0.16em] text-ink">
         DEV ONLY
       </p>

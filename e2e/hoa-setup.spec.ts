@@ -1,6 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 
 function field(page: Page, name: string) {
+  if (name === "Amount") {
+    return page.getByRole("textbox", { name: "Amount" }).filter({ visible: true });
+  }
   return page.getByLabel(name).filter({ visible: true });
 }
 
@@ -55,7 +58,7 @@ test("add and edit a flat unit and a per-sqm unit", async ({ page }) => {
   await page.getByRole("link", { name: "Add unit" }).click();
   await field(page, "Unit label").fill("Blk 3 Lot 2");
   await field(page, "Flat monthly amount").check();
-  await field(page, "Amount (PHP)").fill("2500");
+  await field(page, "Amount").fill("2500");
   await page.getByRole("button", { name: "Add unit" }).click();
   await expect(page.getByRole("heading", { name: "Blk 3 Lot 2" })).toBeVisible();
   await expect(page.getByText("Flat rate · ₱2,500.00 a month")).toBeVisible();
@@ -63,7 +66,7 @@ test("add and edit a flat unit and a per-sqm unit", async ({ page }) => {
   await page.getByRole("link", { name: "Add unit" }).click();
   await field(page, "Unit label").fill("Blk 3 Lot 3");
   await field(page, "Per square metre").check();
-  await field(page, "Amount (PHP)").fill("40");
+  await field(page, "Amount").fill("40");
   await field(page, "Floor area (sqm)").fill("32.5");
   await page.getByRole("button", { name: "Add unit" }).click();
   await expect(page.getByRole("heading", { name: "Blk 3 Lot 3" })).toBeVisible();
@@ -73,7 +76,7 @@ test("add and edit a flat unit and a per-sqm unit", async ({ page }) => {
 
   await page.getByRole("link", { name: "Edit Blk 3 Lot 2" }).click();
   await field(page, "Unit label").fill("Blk 3 Lot 2A");
-  await field(page, "Amount (PHP)").fill("2750.50");
+  await field(page, "Amount").fill("2750.50");
   await page.getByRole("button", { name: "Save unit" }).click();
   await expect(page.getByRole("heading", { name: "Blk 3 Lot 2A" })).toBeVisible();
   await expect(page.getByText("Flat rate · ₱2,750.50 a month")).toBeVisible();
@@ -93,7 +96,7 @@ test("resident sees only their own unit", async ({ page }) => {
   await page.getByRole("link", { name: "Add unit" }).click();
   await field(page, "Unit label").fill("Blk 9 Lot 9");
   await field(page, "Flat monthly amount").check();
-  await field(page, "Amount (PHP)").fill("999");
+  await field(page, "Amount").fill("999");
   await page.getByRole("button", { name: "Add unit" }).click();
   await expect(page.getByRole("heading", { name: "Blk 9 Lot 9" })).toBeVisible();
 

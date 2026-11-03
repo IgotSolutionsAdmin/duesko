@@ -78,8 +78,9 @@ export function AdminNav({ hoaName }: { hoaName: string }) {
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white px-2 pt-1 pb-[env(safe-area-inset-bottom)] print:hidden lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white px-2 pt-1 pb-[env(safe-area-inset-bottom,0px)] print:hidden lg:hidden"
         aria-label="Officer"
+        data-testid="bottom-nav"
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5">
           {ADMIN_NAV_LINKS.map((link) => {

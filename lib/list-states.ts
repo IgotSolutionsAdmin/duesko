@@ -3,6 +3,7 @@ export const LIST_COPY = {
   chargesEmpty: "No charges yet.",
   paymentsEmpty: "No payments yet.",
   proofsEmpty: "No proofs are waiting.",
+  proofsLoadError: "Couldn't load pending proofs. Check your connection and try again.",
   duesEmpty: "No dues on this account yet.",
   acknowledgmentsEmpty: "No paid records yet.",
   loadError: "This list could not be loaded.",

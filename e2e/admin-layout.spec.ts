@@ -82,3 +82,22 @@ test.describe("officer mobile layout", () => {
     await expect(page).toHaveURL(/\/admin\/login$/);
   });
 });
+
+test.describe("resident desktop layout", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test.beforeEach(async ({ request }) => {
+    expect((await request.post("/dev/reset")).status()).toBe(204);
+  });
+
+  test("sidebar replaces the phone bottom bar", async ({ page }) => {
+    await page.goto("/resident/login");
+    await page.getByRole("button", { name: "Sign in as Juan dela Cruz" }).click();
+    await expect(page).toHaveURL(/\/resident$/);
+    const sidebar = page.getByRole("complementary", { name: "Resident menu" });
+    await expect(sidebar).toBeVisible();
+    await expect(page.getByTestId("bottom-nav")).toBeHidden();
+    await sidebar.getByRole("link", { name: "Payments" }).click();
+    await expect(page).toHaveURL(/\/resident\/payments$/);
+  });
+});

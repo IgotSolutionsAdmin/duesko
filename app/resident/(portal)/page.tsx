@@ -15,6 +15,7 @@ import {
   latestProof,
   methodLabel,
 } from "@/lib/payments";
+import { shouldRenderDevRoleSwitch } from "@/lib/demo-auth";
 import { useMockRepository } from "@/lib/test-site";
 
 export const metadata = { title: "Your account" };
@@ -128,11 +129,6 @@ export default async function ResidentHome() {
                           ? `Paid ${formatShortDay(approved.paidAt)} · ${methodLabel(approved.method)}`
                           : `Due ${formatShortDay(charge.dueDate)}`}
                       </p>
-                      {proof?.status === "rejected" && proof.rejectionReason ? (
-                        <p className="mt-1 text-sm text-destructive">
-                          Rejected: {proof.rejectionReason}
-                        </p>
-                      ) : null}
                       {proof && canReupload(proof) ? (
                         <Link
                           href={`/resident/payments?charge=${charge.id}&reupload=1`}
@@ -142,11 +138,16 @@ export default async function ResidentHome() {
                         </Link>
                       ) : null}
                     </div>
-                    <div className="text-right">
+                    <div className="shrink-0 text-right">
                       <StatusWithSample status={proof ? proof.status : status} sample={sample} />
                       <p className="mt-1 text-sm">{formatCentavos(charge.amountCentavos)}</p>
                     </div>
                   </div>
+                  {proof?.status === "rejected" && proof.rejectionReason ? (
+                    <p className="mt-2 w-full text-sm text-destructive">
+                      Rejected: {proof.rejectionReason}
+                    </p>
+                  ) : null}
                 </li>
               );
             })}
@@ -159,7 +160,7 @@ export default async function ResidentHome() {
 
       <HowToPayCard howToPay={hoa?.howToPay} />
 
-      {useMockRepository() ? (
+      {shouldRenderDevRoleSwitch() ? (
         <DevRoleSwitch currentUserId={user.id} portal="resident" />
       ) : null}
     </div>

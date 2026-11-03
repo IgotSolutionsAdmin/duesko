@@ -43,8 +43,8 @@ async function NewCharge({
       </header>
       <form action={createCharge} className="flex flex-col gap-4 rounded-3xl bg-white p-5">
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            CHARGE TYPE
+          <legend className="text-sm font-medium text-ink">
+            Charge type
           </legend>
           <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-border px-3">
             <input type="radio" name="kind" value="monthly" defaultChecked />
@@ -56,12 +56,12 @@ async function NewCharge({
           </label>
         </fieldset>
         <div className="kind-monthly gap-3">
-          <label htmlFor="dues-period" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            PERIOD
+          <label htmlFor="dues-period" className="text-sm font-medium text-ink">
+            Period
           </label>
           <input id="dues-period" name="period" type="month" className={fieldClass} />
-          <label htmlFor="dues-name" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            CHARGE NAME
+          <label htmlFor="dues-name" className="text-sm font-medium text-ink">
+            Charge name
           </label>
           <input
             id="dues-name"
@@ -70,18 +70,18 @@ async function NewCharge({
             placeholder="Leave blank to use the month"
             className={fieldClass}
           />
-          <label htmlFor="dues-due" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            DUE DATE
+          <label htmlFor="dues-due" className="text-sm font-medium text-ink">
+            Due date
           </label>
           <input id="dues-due" name="monthlyDue" type="date" className={fieldClass} />
         </div>
         <div className="kind-special gap-3">
-          <label htmlFor="special-description" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            CHARGE NAME
+          <label htmlFor="special-description" className="text-sm font-medium text-ink">
+            Charge name
           </label>
           <input id="special-description" name="description" maxLength={200} className={fieldClass} />
-          <label htmlFor="special-amount" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            AMOUNT PER UNIT (PHP)
+          <label htmlFor="special-amount" className="text-sm font-medium text-ink">
+            Amount per unit
           </label>
           <div className="flex h-12 items-center rounded-2xl border border-border bg-mist px-3">
             <span className="font-medium text-teal-deep" aria-hidden>₱</span>
@@ -92,13 +92,13 @@ async function NewCharge({
               className="h-full w-full bg-transparent px-2 text-base outline-none"
             />
           </div>
-          <label htmlFor="special-due" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-            DUE DATE
+          <label htmlFor="special-due" className="text-sm font-medium text-ink">
+            Due date
           </label>
           <input id="special-due" name="dueDate" type="date" className={fieldClass} />
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-              APPLY TO
+            <legend className="text-sm font-medium text-ink">
+              Apply to
             </legend>
             <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-border px-3">
               <input type="radio" name="scope" value="all" defaultChecked />

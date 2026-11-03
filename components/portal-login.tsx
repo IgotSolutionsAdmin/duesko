@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { sendMagicLink, sendPasswordResetEmail } from "@/lib/auth-link-actions";
-import { isDemoAuthEnabled } from "@/lib/demo-auth";
+import { isDemoAuthEnabled, shouldRenderDevRoleSwitch } from "@/lib/demo-auth";
 import { signInAsDemo, signInWithPassword } from "@/lib/demo-auth-actions";
 import { seed } from "@/lib/mock/seed";
 import { homePath, roleLabel } from "@/lib/roles";
@@ -84,7 +84,7 @@ export async function PortalLogin({
     );
   }
 
-  if (isDemoAuthEnabled() && useMockRepository() && isTestSite()) {
+  if (isDemoAuthEnabled() && useMockRepository() && isTestSite() && process.env.DUESKO_E2E !== "1") {
     const userId =
       role === "admin_treasurer"
         ? "33333333-3333-4333-8333-333333333301"
@@ -110,7 +110,11 @@ export async function PortalLogin({
     return (
       <LoginFrame
         title={title}
-        lede="DEV ONLY. This mock sign-in is hidden when Supabase is configured."
+        lede={
+          shouldRenderDevRoleSwitch()
+            ? "DEV ONLY. This mock sign-in is hidden when Supabase is configured."
+            : "No password. This sample account is not a real person."
+        }
         notice={error}
         noticeRole={noticeRole}
       >

@@ -19,11 +19,12 @@ export default function ResidentPortalLayout({
 async function ResidentFrame({ children }: { children: React.ReactNode }) {
   await requireRole("resident");
   return (
-    <div className="min-h-dvh bg-mist text-ink">
-      <main className="mx-auto flex w-full max-w-lg flex-col px-5 py-6 pb-[calc(var(--mobile-nav-height)+env(safe-area-inset-bottom,0px))]">
-        {children}
-      </main>
+    <div className="min-h-dvh bg-mist text-ink lg:flex">
       <ResidentNav />
+      <main className="portal-main mx-auto flex w-full max-w-lg flex-col px-5 pt-6 lg:max-w-none lg:flex-1 lg:px-10 lg:pt-8">
+        {children}
+        <div data-testid="page-end" aria-hidden className="h-px w-full shrink-0" />
+      </main>
     </div>
   );
 }

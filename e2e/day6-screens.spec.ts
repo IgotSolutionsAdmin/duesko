@@ -30,16 +30,24 @@ for (const viewport of [
     test(`captures admin and resident screens at ${viewport.suffix}`, async ({ page }) => {
       await signIn(page, "Ana Reyes");
       await expect(page.getByRole("heading", { name: /Magandang umaga/ })).toBeVisible();
+      await expect(page.getByTestId("dev-role-switch")).toHaveCount(0);
+      await expect(page.getByText("DEV ONLY", { exact: true })).toHaveCount(0);
       await shot(page, `admin-dashboard-${viewport.suffix}.png`);
 
       await page.goto("/admin/units");
       await expect(page.getByRole("heading", { name: /on file/ })).toBeVisible();
       await shot(page, `admin-units-${viewport.suffix}.png`);
 
+      await page.goto("/admin/charges");
+      await expect(page.getByRole("heading", { name: "Charges" })).toBeVisible();
+      await shot(page, `admin-charges-${viewport.suffix}.png`);
+
+      await page.goto("/admin/export");
+      await expect(page.getByRole("heading", { name: "Payments CSV" })).toBeVisible();
+      await shot(page, `admin-export-${viewport.suffix}.png`);
+
       await page.goto("/admin/payments");
       await expect(page.getByText("Pending review").first()).toBeVisible();
-      await expect(page.getByText("Paid").first()).toBeVisible();
-      await expect(page.getByText("Rejected").first()).toBeVisible();
       await shot(page, `admin-payments-${viewport.suffix}.png`);
 
       await page.getByRole("button", { name: "Reject" }).first().click();
@@ -47,8 +55,9 @@ for (const viewport of [
       await shot(page, `admin-reject-dialog-${viewport.suffix}.png`);
       await page.getByRole("button", { name: "Cancel" }).click();
 
-      await page.goto("/admin/payments?error=This%20list%20could%20not%20be%20loaded.");
+      await page.goto("/admin/payments?error=1");
       await expect(page.getByTestId("list-error")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Retry" }).or(page.getByRole("link", { name: "Retry" }))).toBeVisible();
       await shot(page, `admin-payments-error-${viewport.suffix}.png`);
 
       await page.goto("/admin/acknowledgments");
@@ -62,6 +71,8 @@ for (const viewport of [
 
       await signIn(page, "Juan dela Cruz");
       await expect(page.getByRole("heading", { name: /Hi,/ })).toBeVisible();
+      await expect(page.getByTestId("dev-role-switch")).toHaveCount(0);
+      await expect(page.getByText("DEV ONLY", { exact: true })).toHaveCount(0);
       await expect(page.getByTestId("how-to-pay")).toBeVisible();
       await shot(page, `resident-home-${viewport.suffix}.png`);
       await shot(page, `resident-how-to-pay-${viewport.suffix}.png`);

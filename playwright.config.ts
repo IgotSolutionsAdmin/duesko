@@ -15,8 +15,13 @@ export default defineConfig({
   projects: [
     {
       name: "app",
-      testIgnore: "**/test-site.spec.ts",
+      testIgnore: ["**/test-site.spec.ts", "**/day6-screens.spec.ts"],
       use: { baseURL: "http://127.0.0.1:43117" },
+    },
+    {
+      name: "screens",
+      testMatch: "**/day6-screens.spec.ts",
+      use: { baseURL: "http://127.0.0.1:43119" },
     },
     {
       name: "test-site",
@@ -35,6 +40,13 @@ export default defineConfig({
       command:
         "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next build && NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next start --hostname 0.0.0.0 --port 43118",
       url: "http://127.0.0.1:43118",
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+    {
+      command:
+        "DUESKO_E2E=1 NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-screens npx next build && DUESKO_E2E=1 NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-screens npx next start --hostname 0.0.0.0 --port 43119",
+      url: "http://127.0.0.1:43119",
       reuseExistingServer: false,
       timeout: 180_000,
     },

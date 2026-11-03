@@ -65,10 +65,15 @@ async function Payments({
           Record cash
         </Link>
       </header>
-      {error ? <ListError message={error} /> : null}
-      {pending.length === 0 ? (
+      {error ? (
+        <ListError message={LIST_COPY.proofsLoadError} retryHref="/admin/payments" />
+      ) : pending.length === 0 ? (
         <ListEmpty>
-          {`${LIST_COPY.proofsEmpty} Record a cash or manual payment if the resident paid you directly.`}
+          {LIST_COPY.proofsEmpty}{" "}
+          <Link href="/admin/payments/cash" className="font-semibold text-teal-deep">
+            Record a cash or manual payment
+          </Link>{" "}
+          if the resident paid you directly.
         </ListEmpty>
       ) : (
         <ul className="flex flex-col gap-4">
@@ -121,30 +126,32 @@ async function Payments({
         ) : (
           <ul className="mt-2 flex flex-col">
             {payments.map((payment) => (
-              <li key={payment.id} className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0">
-                <span>
-                  <span className="block font-medium">{labels.get(payment.unitId)}</span>
-                  <span className="block text-sm text-ink/60">
-                    {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
-                  </span>
-                  {payment.status === "rejected" && payment.rejectionReason ? (
-                    <span className="mt-1 block text-sm text-destructive">
-                      {payment.rejectionReason}
+              <li key={payment.id} className="border-t border-border py-3 first:border-t-0">
+                <div className="flex items-start justify-between gap-3">
+                  <span>
+                    <span className="block font-medium">{labels.get(payment.unitId)}</span>
+                    <span className="block text-sm text-ink/60">
+                      {methodLabel(payment.method)} · {formatShortDay(payment.paidAt)}
                     </span>
-                  ) : null}
-                  {payment.status === "approved" ? (
-                    <Link
-                      href={`/admin/acknowledgments?payment=${payment.id}`}
-                      className="mt-1 inline-block text-sm font-semibold text-teal-deep"
-                    >
-                      Open acknowledgment
-                    </Link>
-                  ) : null}
-                </span>
-                <span className="text-right">
-                  <StatusWithSample status={payment.status} sample={sample} />
-                  <span className="mt-1 block text-sm">{formatCentavos(payment.amountCentavos)}</span>
-                </span>
+                    {payment.status === "approved" ? (
+                      <Link
+                        href={`/admin/acknowledgments?payment=${payment.id}`}
+                        className="mt-1 inline-block text-sm font-semibold text-teal-deep"
+                      >
+                        Open acknowledgment
+                      </Link>
+                    ) : null}
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <StatusWithSample status={payment.status} sample={sample} />
+                    <span className="mt-1 block text-sm">{formatCentavos(payment.amountCentavos)}</span>
+                  </span>
+                </div>
+                {payment.status === "rejected" && payment.rejectionReason ? (
+                  <p className="mt-2 w-full text-sm text-destructive">
+                    {payment.rejectionReason}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>

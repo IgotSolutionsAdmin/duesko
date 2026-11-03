@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { HowToPayCard } from "@/components/how-to-pay-card";
 import { submitProof } from "@/lib/payment-actions";
@@ -15,10 +15,12 @@ import type { Charge } from "@/lib/types";
 const fieldClass =
   "h-12 w-full rounded-2xl border border-border bg-mist px-3 text-base outline-none";
 const errorFieldClass = `${fieldClass} border-destructive`;
+const labelClass = "text-sm font-medium text-ink";
 
 export function ProofUploadForm({
   charges,
   defaultChargeId,
+  defaultAmount,
   howToPay,
   pendingChargeIds,
   reupload,
@@ -26,6 +28,7 @@ export function ProofUploadForm({
 }: {
   charges: Charge[];
   defaultChargeId?: string;
+  defaultAmount?: string;
   howToPay: string;
   pendingChargeIds: string[];
   reupload?: boolean;
@@ -33,16 +36,22 @@ export function ProofUploadForm({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<ProofFieldErrors>({});
+  const [submitted, setSubmitted] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   const previewUrl = useMemo(() => {
     if (!file || file.type === "application/pdf") return null;
     return URL.createObjectURL(file);
   }, [file]);
+  const shown = submitted ? errors : {};
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
     const selected = file ?? (data.get("proof") instanceof File ? (data.get("proof") as File) : null);
+    if (selected && data.get("proof") instanceof File === false) {
+      data.set("proof", selected);
+    }
     const bytes = selected ? new Uint8Array(await selected.arrayBuffer()) : new Uint8Array();
     const next = proofFieldErrors({
       chargeId: String(data.get("chargeId") ?? ""),
@@ -54,6 +63,7 @@ export function ProofUploadForm({
       fileName: selected?.name,
       mimeType: selected?.type,
     });
+    setSubmitted(true);
     if (firstProofError(next)) {
       setErrors(next);
       return;
@@ -75,16 +85,16 @@ export function ProofUploadForm({
             Re-upload a new proof for this rejected charge.
           </p>
         ) : null}
-        <label htmlFor="chargeId" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-          CHARGE
+        <label htmlFor="chargeId" className={labelClass}>
+          Charge
         </label>
         <select
           id="chargeId"
           name="chargeId"
           required
           defaultValue={defaultChargeId}
-          aria-invalid={errors.chargeId ? true : undefined}
-          className={errors.chargeId ? errorFieldClass : fieldClass}
+          aria-invalid={shown.chargeId ? true : undefined}
+          className={shown.chargeId ? errorFieldClass : fieldClass}
         >
           <option value="">Choose a charge</option>
           {charges.map((charge) => {
@@ -97,45 +107,46 @@ export function ProofUploadForm({
             );
           })}
         </select>
-        {errors.chargeId ? (
-          <p role="alert" className="text-sm text-destructive">{errors.chargeId}</p>
+        {shown.chargeId ? (
+          <p role="alert" className="text-sm text-destructive">{shown.chargeId}</p>
         ) : null}
 
-        <label htmlFor="amount" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-          AMOUNT (PHP)
+        <label htmlFor="amount" className={labelClass}>
+          Amount
         </label>
-        <div className={`flex h-12 items-center rounded-2xl border bg-mist px-3 ${errors.amount ? "border-destructive" : "border-border"}`}>
+        <div className={`flex h-12 items-center rounded-2xl border bg-mist px-3 ${shown.amount ? "border-destructive" : "border-border"}`}>
           <span className="font-medium text-teal-deep" aria-hidden>₱</span>
           <input
             id="amount"
             name="amount"
             required
             inputMode="decimal"
-            aria-invalid={errors.amount ? true : undefined}
+            defaultValue={defaultAmount}
+            aria-invalid={shown.amount ? true : undefined}
             className="h-full w-full bg-transparent px-2 text-base outline-none"
           />
         </div>
-        {errors.amount ? (
-          <p role="alert" className="text-sm text-destructive">{errors.amount}</p>
+        {shown.amount ? (
+          <p role="alert" className="text-sm text-destructive">{shown.amount}</p>
         ) : null}
 
-        <label htmlFor="paidOn" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-          PAYMENT DATE
+        <label htmlFor="paidOn" className={labelClass}>
+          Payment date
         </label>
         <input
           id="paidOn"
           name="paidOn"
           type="date"
           required
-          aria-invalid={errors.paidOn ? true : undefined}
-          className={errors.paidOn ? errorFieldClass : fieldClass}
+          aria-invalid={shown.paidOn ? true : undefined}
+          className={shown.paidOn ? errorFieldClass : fieldClass}
         />
-        {errors.paidOn ? (
-          <p role="alert" className="text-sm text-destructive">{errors.paidOn}</p>
+        {shown.paidOn ? (
+          <p role="alert" className="text-sm text-destructive">{shown.paidOn}</p>
         ) : null}
 
-        <label htmlFor="method" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-          METHOD
+        <label htmlFor="method" className={labelClass}>
+          Method
         </label>
         <select id="method" name="method" defaultValue="bank_transfer" className={fieldClass}>
           <option value="bank_transfer">Bank transfer</option>
@@ -143,34 +154,41 @@ export function ProofUploadForm({
           <option value="other">Other</option>
         </select>
 
-        <label htmlFor="referenceNo" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-          REFERENCE NO.
+        <label htmlFor="referenceNo" className={labelClass}>
+          Reference no.
         </label>
         <input
           id="referenceNo"
           name="referenceNo"
           required
-          aria-invalid={errors.referenceNo ? true : undefined}
-          className={errors.referenceNo ? errorFieldClass : fieldClass}
+          aria-invalid={shown.referenceNo ? true : undefined}
+          className={shown.referenceNo ? errorFieldClass : fieldClass}
         />
-        {errors.referenceNo ? (
-          <p role="alert" className="text-sm text-destructive">{errors.referenceNo}</p>
+        {shown.referenceNo ? (
+          <p role="alert" className="text-sm text-destructive">{shown.referenceNo}</p>
         ) : null}
 
-        <label htmlFor="proof" className="text-xs font-semibold tracking-[0.14em] text-teal-deep">
-          PROOF OF PAYMENT
+        <label htmlFor="proof" className={labelClass}>
+          Proof of payment
         </label>
         <input
+          ref={fileInput}
           id="proof"
           name="proof"
           type="file"
           accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf"
-          required
-          aria-invalid={errors.proof ? true : undefined}
+          aria-invalid={shown.proof ? true : undefined}
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           onInput={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
-          className="text-sm"
+          className="sr-only"
         />
+        <button
+          type="button"
+          onClick={() => fileInput.current?.click()}
+          className="inline-flex h-12 min-h-11 w-full items-center justify-center rounded-2xl border border-border bg-mist text-base font-medium text-ink"
+        >
+          Choose photo or PDF
+        </button>
         {file ? (
           <div data-testid="proof-preview" className="flex flex-col gap-2">
             <p className="text-sm text-ink/70">{file.name}</p>
@@ -187,8 +205,8 @@ export function ProofUploadForm({
         ) : (
           <p className="text-sm leading-6 text-ink/60">JPG, PNG, or PDF. 5 MB maximum.</p>
         )}
-        {errors.proof ? (
-          <p role="alert" className="text-sm text-destructive">{errors.proof}</p>
+        {shown.proof ? (
+          <p role="alert" className="text-sm text-destructive">{shown.proof}</p>
         ) : null}
         {serverError ? (
           <p role="alert" className="text-sm text-destructive">{serverError}</p>

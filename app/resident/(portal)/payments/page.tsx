@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
 import { DEFAULT_HOW_TO_PAY } from "@/lib/how-to-pay";
 import { LIST_COPY } from "@/lib/list-states";
-import { formatCentavos, formatShortDay } from "@/lib/money";
+import { centavosToPesoInput, formatCentavos, formatShortDay } from "@/lib/money";
 import { canReupload, chargeBalanceStatus, hasPendingProof, methodLabel } from "@/lib/payments";
 import { useMockRepository } from "@/lib/test-site";
 
@@ -43,6 +43,10 @@ async function ResidentPayments({
     .filter((charge) => hasPendingProof(payments, charge.id))
     .map((charge) => charge.id);
   const sample = useMockRepository();
+  const reuploadCharge =
+    query.reupload === "1" && query.charge
+      ? open.find((charge) => charge.id === query.charge)
+      : undefined;
 
   return (
     <div className="flex flex-col gap-5">
@@ -56,8 +60,12 @@ async function ResidentPayments({
         {sample ? <SampleBadge /> : null}
       </header>
       <ProofUploadForm
+        key={`${query.reupload ?? "upload"}-${query.charge ?? "none"}`}
         charges={open}
         defaultChargeId={query.charge}
+        defaultAmount={
+          reuploadCharge ? centavosToPesoInput(reuploadCharge.amountCentavos) : undefined
+        }
         howToPay={hoa?.howToPay ?? DEFAULT_HOW_TO_PAY}
         pendingChargeIds={pendingChargeIds}
         reupload={query.reupload === "1"}
@@ -77,9 +85,6 @@ async function ResidentPayments({
                   <div>
                     <p className="font-medium">{methodLabel(payment.method)}</p>
                     <p className="text-sm text-ink/60">{formatShortDay(payment.paidAt)}</p>
-                    {payment.status === "rejected" && payment.rejectionReason ? (
-                      <p className="mt-1 text-sm text-destructive">{payment.rejectionReason}</p>
-                    ) : null}
                     {canReupload(payment) ? (
                       <Link
                         href={`/resident/payments?charge=${payment.chargeId}&reupload=1`}
@@ -89,11 +94,14 @@ async function ResidentPayments({
                       </Link>
                     ) : null}
                   </div>
-                  <div className="text-right">
+                  <div className="shrink-0 text-right">
                     <StatusWithSample status={payment.status} sample={sample} />
                     <p className="mt-1 text-sm">{formatCentavos(payment.amountCentavos)}</p>
                   </div>
                 </div>
+                {payment.status === "rejected" && payment.rejectionReason ? (
+                  <p className="mt-2 w-full text-sm text-destructive">{payment.rejectionReason}</p>
+                ) : null}
               </li>
             ))}
           </ul>

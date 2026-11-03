@@ -20,7 +20,7 @@ async function signIn(page: Page, name: "Ana Reyes" | "Juan dela Cruz") {
 
 async function uploadProof(page: Page, reference: string) {
   await page.getByRole("link", { name: "Upload proof of payment" }).click();
-  await page.getByLabel("Amount (PHP)").fill("1500");
+  await page.getByLabel("Amount", { exact: true }).fill("1500");
   await page.getByLabel("Payment date").fill("2026-11-03");
   await page.getByLabel("Method").selectOption("gcash");
   await page.getByLabel("Reference no.").fill(reference);
@@ -78,7 +78,7 @@ test("officer records cash and a resident cannot see another unit's payment", as
   await page.getByRole("link", { name: "Payments" }).click();
   await page.getByRole("link", { name: "Record cash" }).click();
   await page.getByLabel("Unit").selectOption({ label: "Blk 2 Lot 1 · November 2026 dues" });
-  await page.getByLabel("Amount received (PHP)").fill("1680");
+  await page.getByLabel("Amount", { exact: true }).fill("1680");
   await page.getByLabel("Date received").fill("2026-11-03");
   await page.getByLabel("HOA reference no.").fill("CR-42");
   await page.getByRole("button", { name: "Save cash payment" }).click();

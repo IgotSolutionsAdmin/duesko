@@ -63,7 +63,7 @@ export function UnitForm({
       </fieldset>
       <div className="flex flex-col gap-2">
         <label htmlFor={amountId} className="text-sm font-medium text-ink">
-          Amount (PHP)
+          Amount
         </label>
         <div className="flex h-12 items-center rounded-xl border border-border bg-white px-3 focus-within:ring-3 focus-within:ring-ring/50">
           <span className="text-base font-medium text-teal-deep" aria-hidden>

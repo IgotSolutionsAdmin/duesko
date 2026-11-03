@@ -68,11 +68,7 @@ export function RejectProofDialog({ paymentId }: { paymentId: string }) {
               id={reasonId}
               name="reason"
               value={reason}
-              onChange={(event) => {
-                setReason(event.target.value);
-                if (error) setError(rejectReasonError(event.target.value));
-              }}
-              onBlur={() => setError(rejectReasonError(reason))}
+              onChange={(event) => setReason(event.target.value)}
               placeholder="e.g. Reference number does not match"
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? errorId : undefined}

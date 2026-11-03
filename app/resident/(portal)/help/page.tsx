@@ -2,7 +2,7 @@ import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { HowToPayCard } from "@/components/how-to-pay-card";
 import { requireRole } from "@/lib/auth";
 import { getRepository } from "@/lib/get-repository";
-import { useMockRepository } from "@/lib/test-site";
+import { shouldRenderDevRoleSwitch } from "@/lib/demo-auth";
 
 export const metadata = { title: "Help" };
 
@@ -26,7 +26,7 @@ export default async function HelpPage() {
           Cash you hand to an officer is recorded by them. You do not upload a proof for that.
         </p>
       </section>
-      {useMockRepository() ? (
+      {shouldRenderDevRoleSwitch() ? (
         <DevRoleSwitch currentUserId={user.id} portal="resident" />
       ) : null}
     </div>
