@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { PortalLogin } from "@/components/portal-login";
 
 export const metadata = { title: "Officer sign in" };
@@ -16,6 +17,7 @@ export default function AdminLoginPage({
 }
 
 async function AdminLogin({ searchParams }: { searchParams: Promise<{ auth?: string }> }) {
+  await connection();
   const { auth } = await searchParams;
   return <PortalLogin role="admin_treasurer" errorCode={auth} />;
 }

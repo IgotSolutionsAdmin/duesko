@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { destinationAfterAuth, linkTypeFromParam } from "../lib/auth-destination";
+import {
+  destinationAfterAuth,
+  linkTypeFromParam,
+  passwordSignInDestination,
+  roleFromUserRows,
+} from "../lib/auth-destination";
 
 describe("auth destination", () => {
   it("sends an invite to set a password", () => {
@@ -58,6 +63,23 @@ describe("auth destination", () => {
       }),
       "/admin/login?auth=profile",
     );
+  });
+
+  it("sends a signed-in officer to the admin portal", () => {
+    assert.equal(passwordSignInDestination("admin_treasurer", "admin"), "/admin");
+    assert.equal(passwordSignInDestination("resident", "admin"), "/resident");
+    assert.equal(passwordSignInDestination(null, "admin"), "/admin/login?auth=profile");
+    assert.equal(passwordSignInDestination(null, "resident"), "/resident/login?auth=profile");
+  });
+
+  it("reads the role that belongs to the session subject", () => {
+    const rows = [
+      { id: "bc5e0b99-a2d7-414d-8c92-f359345c14f1", role: "admin_treasurer" },
+      { id: "other", role: "resident" },
+    ];
+    assert.equal(roleFromUserRows(rows, "bc5e0b99-a2d7-414d-8c92-f359345c14f1"), "admin_treasurer");
+    assert.equal(roleFromUserRows(rows, "missing"), null);
+    assert.equal(roleFromUserRows(rows, null), null);
   });
 
   it("ignores unknown link types", () => {

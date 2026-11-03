@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { passwordSignInDestination } from "./auth-destination";
 import { DEMO_COOKIE } from "./demo-cookie";
 import { getRepository } from "./get-repository";
 import { homePath } from "./roles";
@@ -40,34 +41,36 @@ export async function signInAsDemo(formData: FormData) {
 
 /** Email and password sign-in for Supabase Auth. */
 export async function signInWithPassword(formData: FormData) {
-  if (!isSupabaseConfigured()) redirect("/sign-in");
+  const portal = formData.get("portal") === "resident" ? "resident" : "admin";
+  const loginPath = portal === "resident" ? "/resident/login" : "/admin/login";
+  if (!isSupabaseConfigured()) redirect(loginPath);
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) redirect("/sign-in?auth=missing");
+  if (!email || !password) redirect(`${loginPath}?auth=missing`);
 
   const supabase = createAuthClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-  if (error || !data.session) redirect("/sign-in?auth=invalid");
+  if (error || !data.session) redirect(`${loginPath}?auth=invalid`);
 
   const jar = await cookies();
   jar.set(SUPABASE_ACCESS_COOKIE, data.session.access_token, supabaseCookieOptions);
   jar.set(SUPABASE_REFRESH_COOKIE, data.session.refresh_token, supabaseCookieOptions);
-  jar.delete(DEMO_COOKIE);
+  jar.set(DEMO_COOKIE, "", { ...supabaseCookieOptions, maxAge: 0 });
 
   const client = await createDataClient(
     data.session.access_token,
     data.session.refresh_token,
   );
-  if (!client) redirect("/sign-in?auth=invalid");
+  if (!client) redirect(`${loginPath}?auth=invalid`);
   const user = await createSupabaseRepository(
     client,
     data.session.user.id,
   ).getUser(data.session.user.id);
-  redirect(user ? homePath(user.role) : "/sign-in?auth=profile");
+  redirect(passwordSignInDestination(user?.role ?? null, portal));
 }
 
 export async function signOut(formData?: FormData) {

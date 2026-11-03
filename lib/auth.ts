@@ -25,10 +25,11 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   return null;
 }
 
-/** Sends an anonymous visitor to sign-in, and the other role to their own home. */
+/** Sends an anonymous visitor to that portal's login, and the other role home. */
 export async function requireRole(role: Role): Promise<AppUser> {
+  const login = role === "resident" ? "/resident/login" : "/admin/login";
   const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
+  if (!user) redirect(login);
   if (user.role !== role) redirect(homePath(user.role));
   return user;
 }

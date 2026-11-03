@@ -27,6 +27,26 @@ export function destinationAfterAuth(input: {
   return "/admin/login?auth=profile";
 }
 
+/** The signed-in person's role, matched to the JWT subject. */
+export function roleFromUserRows(
+  rows: Array<{ id: string; role: string }>,
+  subject: string | null,
+): Role | null {
+  if (!subject) return null;
+  const row = rows.find((user) => user.id === subject);
+  if (row?.role === "admin_treasurer" || row?.role === "resident") return row.role;
+  return null;
+}
+
+/** After a password sign-in. A missing profile stays on that portal's login. */
+export function passwordSignInDestination(
+  role: Role | null,
+  portal: "admin" | "resident",
+): "/admin" | "/resident" | "/admin/login?auth=profile" | "/resident/login?auth=profile" {
+  if (role) return homePath(role);
+  return portal === "resident" ? "/resident/login?auth=profile" : "/admin/login?auth=profile";
+}
+
 export function passwordAlreadySet(metadata: unknown): boolean {
   if (!metadata || typeof metadata !== "object") return false;
   return (metadata as { password_set?: unknown }).password_set === true;

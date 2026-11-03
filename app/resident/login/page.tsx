@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { PortalLogin } from "@/components/portal-login";
 
 export const metadata = { title: "Resident sign in" };
@@ -20,6 +21,7 @@ async function ResidentLogin({
 }: {
   searchParams: Promise<{ auth?: string }>;
 }) {
+  await connection();
   const { auth } = await searchParams;
   return <PortalLogin role="resident" errorCode={auth} />;
 }

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { DEMO_COOKIE } from "./lib/demo-cookie";
 import { DEMO_ROLE_BY_ID } from "./lib/demo-directory";
+import { roleFromUserRows } from "./lib/auth-destination";
 import { SUPABASE_ACCESS_COOKIE } from "./lib/supabase/cookie-names";
 import { useMockRepository } from "./lib/test-site";
 import type { Role } from "./lib/types";
@@ -52,10 +53,7 @@ async function resolveRole(request: NextRequest): Promise<Role | null> {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
   const { data } = await supabase.from("users").select("id, role");
-  const subject = jwtSubject(access);
-  const row = (data ?? []).find((user) => user.id === subject);
-  if (row?.role === "admin_treasurer" || row?.role === "resident") return row.role;
-  return null;
+  return roleFromUserRows(data ?? [], jwtSubject(access));
 }
 
 function jwtSubject(token: string): string | null {

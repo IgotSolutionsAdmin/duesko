@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { setOwnPassword } from "@/lib/auth-link-actions";
@@ -30,9 +31,10 @@ async function SetPassword({
 }: {
   searchParams: Promise<{ auth?: string }>;
 }) {
-  if (!isSupabaseConfigured()) redirect("/");
+  await connection();
+  if (!isSupabaseConfigured()) redirect("/admin/login");
   const tokens = await readSupabaseTokens();
-  if (!tokens) redirect("/");
+  if (!tokens) redirect("/admin/login");
 
   const { auth } = await searchParams;
   const message = auth ? (problems[auth] ?? null) : null;

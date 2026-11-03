@@ -7,8 +7,24 @@ test("an auth callback without a code does not open a portal", async ({ page }) 
   ).toBeVisible();
 });
 
-test("set password without a session returns to the portal chooser", async ({ page }) => {
+test("set password without a session returns to officer sign-in", async ({ page }) => {
   await page.goto("/auth/set-password");
-  await expect(page).toHaveURL(/127\.0\.0\.1:43117\/$/);
-  await expect(page.getByRole("heading", { name: "Choose a portal" })).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/login$/);
+  await expect(page.getByRole("heading", { name: "Officer sign in" })).toBeVisible();
+});
+
+test("a rejected sign-in stays on the officer login", async ({ page }) => {
+  await page.goto("/sign-in?auth=invalid");
+  await expect(page).toHaveURL(/\/admin\/login\?auth=invalid$/);
+  await expect(page.getByRole("alert")).toHaveText("Email or password is incorrect.");
+  await expect(page.getByRole("heading", { name: "Choose a portal" })).toHaveCount(0);
+});
+
+test("an officer session stays on the admin portal", async ({ page }) => {
+  await page.goto("/admin/login");
+  await page.getByRole("button", { name: "Sign in as Ana Reyes" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.reload();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole("heading", { name: "Choose a portal" })).toHaveCount(0);
 });

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType, Session } from "@supabase/supabase-js";
 import { linkTypeFromParam } from "@/lib/auth-destination";
@@ -106,6 +107,10 @@ async function redirectWithSession(
     role,
   });
   const response = NextResponse.redirect(new URL(destination, request.url));
+  const jar = await cookies();
+  jar.set(SUPABASE_ACCESS_COOKIE, session.access_token, supabaseCookieOptions);
+  jar.set(SUPABASE_REFRESH_COOKIE, session.refresh_token, supabaseCookieOptions);
+  jar.set(DEMO_COOKIE, "", { ...supabaseCookieOptions, maxAge: 0 });
   response.cookies.set(SUPABASE_ACCESS_COOKIE, session.access_token, supabaseCookieOptions);
   response.cookies.set(SUPABASE_REFRESH_COOKIE, session.refresh_token, supabaseCookieOptions);
   response.cookies.set(DEMO_COOKIE, "", { ...supabaseCookieOptions, maxAge: 0 });

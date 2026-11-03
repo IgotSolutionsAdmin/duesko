@@ -41,7 +41,7 @@ export async function PortalLogin({
         ? "Sign in as demo admin (Ana Reyes)"
         : "Sign in as demo resident (Juan dela Cruz)";
     return (
-      <LoginFrame title={title} lede="No password. This sample account is not a real person.">
+      <LoginFrame title={title} lede="No password. This sample account is not a real person." notice={error} noticeRole={errorCode === "sent" ? "status" : "alert"}>
         <form action={signInAsDemo}>
           <input type="hidden" name="userId" value={userId} />
           <Button type="submit" className="h-12 w-full text-base">
@@ -55,21 +55,19 @@ export async function PortalLogin({
   if (!useMockRepository() && isSupabaseConfigured()) {
     const portal = role === "resident" ? "resident" : "admin";
     return (
-      <LoginFrame title={title} lede="Use your email and password, or ask for a one-time sign-in link.">
+      <LoginFrame title={title} lede="Use your email and password, or ask for a one-time sign-in link." notice={error} noticeRole={errorCode === "sent" ? "status" : "alert"}>
         <form action={signInWithPassword} className="flex flex-col gap-3">
+          <input type="hidden" name="portal" value={portal} />
           <label htmlFor="email" className="text-sm font-medium">Email</label>
           <input id="email" name="email" type="email" required autoComplete="email" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
           <label htmlFor="password" className="text-sm font-medium">Password</label>
           <input id="password" name="password" type="password" required autoComplete="current-password" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
-          {error && errorCode !== "sent" && errorCode !== "unsent" ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="h-12 w-full text-base">Sign in</Button>
         </form>
         <form action={sendMagicLink} className="flex flex-col gap-3">
           <input type="hidden" name="portal" value={portal} />
           <label htmlFor="magic-email" className="text-sm font-medium">Email for a sign-in link</label>
           <input id="magic-email" name="email" type="email" required autoComplete="email" className="h-12 rounded-2xl border border-border bg-white px-3 text-base" />
-          {errorCode === "sent" ? <p role="status" className="text-sm text-teal-deep">{error}</p> : null}
-          {errorCode === "unsent" ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" variant="outline" className="h-12 w-full bg-white text-base">Email me a sign-in link</Button>
         </form>
       </LoginFrame>
@@ -81,6 +79,7 @@ export async function PortalLogin({
       <LoginFrame
         title={title}
         lede="This production build has no database. Set the Supabase env vars, or NEXT_PUBLIC_DUESKO_TEST_SITE=true for the sample site."
+        notice={error}
       >
         <p className="text-sm leading-6 text-ink/70">Demo sign-in is turned off.</p>
       </LoginFrame>
@@ -92,6 +91,7 @@ export async function PortalLogin({
     <LoginFrame
       title={title}
       lede="DEV ONLY. This mock sign-in is hidden when Supabase is configured."
+      notice={error}
     >
       <div className="flex flex-col gap-3">
         {people.map((user) => {
@@ -118,10 +118,14 @@ export async function PortalLogin({
 function LoginFrame({
   title,
   lede,
+  notice,
+  noticeRole = "alert",
   children,
 }: {
   title: string;
   lede: string;
+  notice?: string | null;
+  noticeRole?: "alert" | "status";
   children: React.ReactNode;
 }) {
   return (
@@ -134,6 +138,11 @@ function LoginFrame({
         <h1 className="font-heading text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-2 text-base leading-7 text-ink/70">{lede}</p>
       </div>
+      {notice ? (
+        <p role={noticeRole} className={noticeRole === "status" ? "text-sm text-teal-deep" : "text-sm text-destructive"}>
+          {notice}
+        </p>
+      ) : null}
       {children}
     </main>
   );
