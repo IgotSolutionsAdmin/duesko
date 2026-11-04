@@ -20,7 +20,7 @@ export function ListSkeleton({
       {Array.from({ length: rows }, (_, index) => (
         <div
           key={index}
-          className="h-20 animate-pulse rounded-2xl bg-white"
+          className="h-16 animate-pulse rounded-xl border border-border bg-white"
         />
       ))}
       <span className="sr-only">{label}</span>
@@ -36,7 +36,7 @@ export function ListEmpty({
   return (
     <div
       data-testid="list-empty"
-      className="rounded-3xl border border-dashed border-teal/40 bg-white p-5 text-sm leading-6 text-ink/80"
+      className="rounded-xl border border-dashed border-border bg-white p-5 text-[13px] leading-6 text-ink/80"
     >
       {children}
     </div>
@@ -54,7 +54,7 @@ export function ListError({
     <div
       role="alert"
       data-testid="list-error"
-      className="flex flex-col gap-3 rounded-3xl bg-white p-5 text-sm leading-6 text-destructive"
+      className="flex flex-col gap-3 rounded-xl border border-border bg-white p-5 text-[13px] leading-6 text-destructive"
     >
       <p>{message}</p>
       {retryHref ? (

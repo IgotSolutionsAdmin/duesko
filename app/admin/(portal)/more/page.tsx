@@ -35,13 +35,13 @@ async function More({
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <p className="text-sm font-medium text-teal-deep">More</p>
-        <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-balance">
+        <p className="text-[13px] font-medium text-ink/50">More</p>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-balance">
           {registeredName || "Association"}
         </h1>
       </header>
-      <section className="rounded-3xl bg-white p-5">
-        <h2 className="font-heading text-lg font-semibold">Registered name</h2>
+      <section className="rounded-xl border border-border bg-white p-5">
+        <h2 className="text-[13px] font-semibold">Registered name</h2>
         <div className="mt-4">
           <HoaNameForm
             registeredName={registeredName}
@@ -49,8 +49,8 @@ async function More({
           />
         </div>
       </section>
-      <section className="rounded-3xl bg-white p-5">
-        <h2 className="font-heading text-lg font-semibold">How to pay</h2>
+      <section className="rounded-xl border border-border bg-white p-5">
+        <h2 className="text-[13px] font-semibold">How to pay</h2>
         <div className="mt-4">
           <HowToPayForm
             howToPay={hoa?.howToPay ?? DEFAULT_HOW_TO_PAY}
@@ -59,10 +59,10 @@ async function More({
         </div>
       </section>
       <nav className="flex flex-col gap-2">
-        <Link href="/admin/acknowledgments" className="rounded-2xl bg-white px-4 py-4 font-medium">
+        <Link href="/admin/acknowledgments" className="rounded-xl border border-border bg-white px-4 py-4 text-[13px] font-medium">
           Payment acknowledgments
         </Link>
-        <Link href="/admin/export" className="rounded-2xl bg-white px-4 py-4 font-medium">
+        <Link href="/admin/export" className="rounded-xl border border-border bg-white px-4 py-4 text-[13px] font-medium">
           Export payments
         </Link>
       </nav>

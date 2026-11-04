@@ -14,7 +14,7 @@ export function PaymentAcknowledgment({
   sample?: boolean;
 }) {
   return (
-    <article className="acknowledgment mx-auto w-full max-w-2xl rounded-3xl bg-white p-6 text-ink print:max-w-none print:rounded-none print:p-0">
+    <article className="acknowledgment mx-auto w-full max-w-2xl rounded-xl border border-border bg-white p-6 text-ink print:max-w-none print:rounded-none print:border-0 print:p-0">
       <h1 className="font-heading text-center text-2xl font-semibold tracking-tight">
         {ACKNOWLEDGMENT_HEADER}
       </h1>

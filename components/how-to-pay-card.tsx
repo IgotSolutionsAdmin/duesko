@@ -8,7 +8,7 @@ export function HowToPayCard({
   return (
     <section
       aria-labelledby="how-to-pay-title"
-      className="rounded-3xl bg-white p-5"
+      className="rounded-xl border border-border bg-white p-5"
       data-testid="how-to-pay"
     >
       <h2 id="how-to-pay-title" className="font-heading text-lg font-semibold">

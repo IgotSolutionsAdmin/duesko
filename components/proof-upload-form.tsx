@@ -76,7 +76,7 @@ export function ProofUploadForm({
       <HowToPayCard howToPay={howToPay} />
       <form
         onSubmit={onSubmit}
-        className="flex flex-col gap-4 rounded-3xl bg-white p-5"
+        className="flex flex-col gap-4 rounded-xl border border-border bg-white p-5"
         noValidate
       >
         {reupload ? (

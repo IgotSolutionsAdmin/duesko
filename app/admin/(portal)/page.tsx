@@ -1,3 +1,4 @@
+import { DataRow, DataTable } from "@/components/data-table";
 import { DevRoleSwitch } from "@/components/dev-role-switch";
 import { ListEmpty } from "@/components/list-state";
 import { SampleBadge, StatusWithSample } from "@/components/status-badge";
@@ -62,86 +63,90 @@ export default async function AdminDashboard() {
     : "DUES";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold leading-tight tracking-tight text-ink">
+          <h1 className="text-xl font-semibold leading-tight tracking-tight text-ink">
             Magandang umaga, {firstName(user.fullName)}
           </h1>
-          <p className="mt-1 max-w-[14rem] text-sm leading-5 text-ink/70">
+          <p className="mt-1 max-w-[14rem] text-[13px] leading-5 text-ink/60">
             {hoa?.registeredName ?? "Association"}
           </p>
         </div>
         {useMockRepository() ? <SampleBadge /> : <span className="mt-1 h-3 w-16 rounded-full bg-teal-deep" aria-hidden />}
       </header>
 
-      <section className="rounded-3xl bg-teal-deep p-5 text-white">
-        <p className="text-xs font-semibold tracking-[0.14em] text-white/80">
-          {periodLabel} DUES
-        </p>
-        <p className="mt-3 font-heading text-4xl font-semibold tracking-tight">
-          {formatCentavos(collected)}
-        </p>
-        <p className="mt-1 text-sm text-white/80">
-          collected of {formatCentavos(billed)}
-        </p>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/20">
-          <div className="h-full rounded-full bg-mango" style={{ width: `${percent}%` }} />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-sm">
-          <p>{percent}% collected</p>
-          <p>{dueDate ? `Due ${formatShortDay(dueDate)}` : "No due date"}</p>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-2 gap-3">
-        <section className="rounded-3xl bg-white p-4">
-          <p className="text-xs font-semibold tracking-[0.14em] text-ink/50">PAID</p>
-          <p className="mt-2 font-heading text-4xl font-semibold text-ink">{paidUnits}</p>
-          <p className="text-sm text-ink/60">units</p>
+      <div className="grid gap-3 md:grid-cols-3">
+        <section className="rounded-xl border border-border bg-white p-4 md:col-span-1">
+          <p className="text-[11px] font-medium tracking-[0.08em] text-ink/45">
+            {periodLabel} DUES
+          </p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+            {formatCentavos(collected)}
+          </p>
+          <p className="mt-1 text-[13px] text-ink/50">
+            collected of {formatCentavos(billed)}
+          </p>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#eef1f1]">
+            <div className="h-full rounded-full bg-teal" style={{ width: `${percent}%` }} />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[13px] text-ink/55">
+            <p>{percent}% collected</p>
+            <p>{dueDate ? `Due ${formatShortDay(dueDate)}` : "No due date"}</p>
+          </div>
         </section>
-        <section className="rounded-3xl bg-white p-4">
-          <p className="text-xs font-semibold tracking-[0.14em] text-ink/50">NOT YET PAID</p>
-          <p className="mt-2 font-heading text-4xl font-semibold text-mango">{openUnits}</p>
-          <p className="text-sm text-ink/60">units</p>
+        <section className="rounded-xl border border-border bg-white p-4">
+          <p className="text-[11px] font-medium tracking-[0.08em] text-ink/45">PAID</p>
+          <p className="mt-2 text-2xl font-semibold text-ink">{paidUnits}</p>
+          <p className="text-[13px] text-ink/50">units</p>
+        </section>
+        <section className="rounded-xl border border-border bg-white p-4">
+          <p className="text-[11px] font-medium tracking-[0.08em] text-ink/45">NOT YET PAID</p>
+          <p className="mt-2 text-2xl font-semibold text-ink">{openUnits}</p>
+          <p className="text-[13px] text-ink/50">units</p>
         </section>
       </div>
 
-      <section className="rounded-3xl bg-white p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-semibold">Units</h2>
-          <p className="text-sm text-ink/50">{units.length} total</p>
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-4 border-b border-border">
+            <h2 className="border-b-2 border-teal pb-2 text-[13px] font-medium text-ink">Units</h2>
+            <p className="pb-2 text-[13px] text-ink/40">{units.length} total</p>
+          </div>
         </div>
         {units.length === 0 ? (
-          <div className="mt-3">
-            <ListEmpty>{LIST_COPY.unitsEmpty}</ListEmpty>
-          </div>
+          <ListEmpty>{LIST_COPY.unitsEmpty}</ListEmpty>
         ) : (
-        <ul className="mt-3 flex flex-col">
+        <DataTable
+          caption="Units"
+          headers={[{ label: "Unit" }, { label: "Resident" }, { label: "Status" }, { label: "Amount" }]}
+        >
           {units.map((unit) => {
             const resident = people.find((person) => person.unitId === unit.id);
             const charge = periodCharges.find((row) => row.unitId === unit.id);
             const status = charge ? chargeBalanceStatus(charge, payments) : "unpaid";
             const name = resident?.fullName ?? "No resident yet";
             return (
-              <li key={unit.id} className="flex items-center gap-3 border-t border-border py-3 first:border-t-0">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-teal/15 font-heading text-sm font-semibold text-teal-deep">
-                  {initials(resident?.fullName ?? unit.label)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-ink">{unit.label}</span>
-                  <span className="block truncate text-sm text-ink/60">{name}</span>
-                </span>
-                <span className="text-right">
-                  <StatusWithSample status={status} sample={useMockRepository()} />
-                  <span className="mt-1 block text-sm text-ink/70">
-                    {formatCentavos(charge?.amountCentavos ?? 0)}
+              <DataRow key={unit.id}>
+                <td className="px-3 py-2.5">
+                  <span className="flex items-center gap-2">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-teal/10 text-[11px] font-semibold text-teal-deep">
+                      {initials(resident?.fullName ?? unit.label)}
+                    </span>
+                    <span className="font-medium">{unit.label}</span>
                   </span>
-                </span>
-              </li>
+                </td>
+                <td className="px-3 py-2.5 text-ink/70">{name}</td>
+                <td className="px-3 py-2.5">
+                  <StatusWithSample status={status} sample={useMockRepository()} />
+                </td>
+                <td className="px-3 py-2.5 text-ink/80">
+                  {formatCentavos(charge?.amountCentavos ?? 0)}
+                </td>
+              </DataRow>
             );
           })}
-        </ul>
+        </DataTable>
         )}
       </section>
 

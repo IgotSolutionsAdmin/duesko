@@ -1,3 +1,4 @@
+import { DataRow, DataTable } from "@/components/data-table";
 import { ListEmpty } from "@/components/list-state";
 import { StatusWithSample } from "@/components/status-badge";
 import { LIST_COPY } from "@/lib/list-states";
@@ -27,40 +28,43 @@ export function ChargeList({
 
   return (
     <section aria-label={label} className="flex flex-col gap-3">
-      <h2 className="font-heading text-lg font-semibold text-ink">{label}</h2>
+      <h2 className="text-[13px] font-medium text-ink">{label}</h2>
       {ordered.length === 0 ? (
         <ListEmpty>{LIST_COPY.chargesEmpty}</ListEmpty>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <DataTable
+          caption={label}
+          headers={[
+            { label: "Charge" },
+            { label: "Kind" },
+            { label: "Due" },
+            { label: "Status" },
+            { label: "Amount" },
+          ]}
+        >
           {ordered.map((charge) => (
-            <li
-              key={charge.id}
-              className="rounded-2xl border border-border bg-white p-4"
-            >
-              <div className="flex items-start justify-between gap-2">
+            <DataRow key={charge.id}>
+              <td className="px-3 py-2.5">
                 {showUnit ? (
-                  <p className="text-sm font-medium text-teal-deep">
+                  <p className="text-[12px] font-medium text-teal-deep">
                     {labels.get(charge.unitId) ?? "Unit"}
                   </p>
-                ) : (
-                  <span />
-                )}
-                <StatusWithSample status={charge.status} sample={sample} />
-              </div>
-              <h3 className="mt-1 font-heading text-xl font-semibold text-ink">
-                {charge.description}
-              </h3>
-              <p className="mt-2 font-heading text-2xl font-semibold text-teal">
-                {formatCentavos(charge.amountCentavos)}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-ink/80">
+                ) : null}
+                <h3 className="text-[13px] font-semibold text-ink">{charge.description}</h3>
+              </td>
+              <td className="px-3 py-2.5 text-ink/70">
                 {charge.kind === "dues" ? "Monthly dues" : "Special assessment"}
-                {" · "}
-                Due {charge.dueDate}
-              </p>
-            </li>
+              </td>
+              <td className="px-3 py-2.5 text-ink/70">{charge.dueDate}</td>
+              <td className="px-3 py-2.5">
+                <StatusWithSample status={charge.status} sample={sample} />
+              </td>
+              <td className="px-3 py-2.5 font-medium">
+                <p>{formatCentavos(charge.amountCentavos)}</p>
+              </td>
+            </DataRow>
           ))}
-        </ul>
+        </DataTable>
       )}
     </section>
   );

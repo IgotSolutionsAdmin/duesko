@@ -39,44 +39,44 @@ export default async function ResidentHome() {
   const sample = useMockRepository();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold leading-tight">
+          <h1 className="text-xl font-semibold leading-tight">
             Hi, {firstName(user.fullName)}
           </h1>
-          <p className="mt-1 max-w-[14rem] text-sm leading-5 text-ink/70">
+          <p className="mt-1 max-w-[14rem] text-[13px] leading-5 text-ink/60">
             {hoa?.registeredName}
           </p>
         </div>
         {sample ? <SampleBadge /> : <span className="mt-1 h-3 w-16 rounded-full bg-teal-deep" aria-hidden />}
       </header>
 
-      <section className="rounded-3xl bg-teal-deep p-5 text-white">
-        <h2 className="text-xs font-semibold tracking-[0.14em] text-white/75">
+      <section className="rounded-xl border border-border bg-white p-5">
+        <h2 className="text-[11px] font-medium tracking-[0.08em] text-ink/45">
           {unit?.label ?? "Your unit"}
         </h2>
         {unit ? (
-          <p className="mt-1 text-sm text-white/80">{describeMonthlyDues(unit)}</p>
+          <p className="mt-1 text-[13px] text-ink/55">{describeMonthlyDues(unit)}</p>
         ) : null}
-        <p className="mt-4 text-sm text-white/80">Balance due</p>
-        <p className="mt-1 font-heading text-4xl font-semibold tracking-tight">
+        <p className="mt-4 text-[13px] text-ink/55">Balance due</p>
+        <p className="mt-1 text-3xl font-semibold tracking-tight text-ink">
           {formatCentavos(balance)}
         </p>
         {openCharge ? (
           <Link
             href={`/resident/payments?charge=${openCharge.id}`}
-            className="mt-5 flex h-12 items-center justify-center rounded-2xl bg-mango text-base font-semibold text-ink"
+            className="mt-5 flex h-11 items-center justify-center rounded-lg bg-teal text-[13px] font-semibold text-white"
           >
             Upload proof of payment
           </Link>
         ) : (
-          <p className="mt-5 text-sm text-white/80">You have no balance due.</p>
+          <p className="mt-5 text-[13px] text-ink/55">You have no balance due.</p>
         )}
       </section>
 
-      <section className="rounded-3xl bg-white p-4" aria-label="Latest submission">
-        <h2 className="font-heading text-lg font-semibold">Latest submission</h2>
+      <section className="rounded-xl border border-border bg-white p-4" aria-label="Latest submission">
+        <h2 className="text-[13px] font-semibold">Latest submission</h2>
         {latest ? (
           <div className="mt-3 flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -105,8 +105,8 @@ export default async function ResidentHome() {
         )}
       </section>
 
-      <section className="rounded-3xl bg-white p-4" aria-label="My dues and payments">
-        <h2 className="font-heading text-lg font-semibold">My dues & payments</h2>
+      <section className="rounded-xl border border-border bg-white p-4" aria-label="My dues and payments">
+        <h2 className="text-[13px] font-semibold">My dues & payments</h2>
         {charges.length === 0 ? (
           <div className="mt-3">
             <ListEmpty>{LIST_COPY.duesEmpty}</ListEmpty>

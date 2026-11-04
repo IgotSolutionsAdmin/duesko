@@ -35,15 +35,15 @@ async function ExportForm({
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <p className="text-sm font-medium text-teal-deep">Export</p>
-        <h1 className="mt-1 font-heading text-3xl font-semibold">Payments CSV</h1>
+        <p className="text-[13px] font-medium text-ink/50">Export</p>
+        <h1 className="mt-1 text-xl font-semibold">Payments CSV</h1>
       </header>
-      <p className="rounded-3xl bg-white p-5 text-sm leading-6 text-ink/70">
+      <p className="rounded-xl border border-border bg-white p-5 text-[13px] leading-6 text-ink/70">
         Download units, charges, or payments for this association. Amounts are pesos converted
         from stored centavos. Each download is written to the export audit log.
       </p>
       {error ? <ListError message="That export could not be prepared." /> : null}
-      <form action="/admin/export/csv" method="get" className="flex flex-col gap-4 rounded-3xl bg-white p-5">
+      <form action="/admin/export/csv" method="get" className="flex flex-col gap-4 rounded-xl border border-border bg-white p-5">
         <label htmlFor="kind" className="text-sm font-medium">
           What to download
         </label>

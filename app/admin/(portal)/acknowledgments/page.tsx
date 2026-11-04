@@ -50,8 +50,8 @@ async function Acknowledgments({
   return (
     <div className="flex flex-col gap-5">
       <header className="print:hidden">
-        <p className="text-sm font-medium text-teal-deep">Acknowledgments</p>
-        <p className="mt-1 font-heading text-3xl font-semibold">Payment acknowledgment</p>
+        <p className="text-[13px] font-medium text-ink/50">Acknowledgments</p>
+        <p className="mt-1 text-xl font-semibold">Payment acknowledgment</p>
       </header>
       {selected ? (
         <div className="flex flex-col gap-3">
