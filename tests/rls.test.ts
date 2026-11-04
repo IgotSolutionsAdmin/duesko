@@ -144,6 +144,7 @@ grant select, insert on table storage.objects to authenticated;`,
       "supabase/migrations/20261103180000_export_and_acknowledgments.sql",
       "supabase/migrations/20261103210000_how_to_pay.sql",
       "supabase/migrations/20261107120000_waitlist_signups.sql",
+      "supabase/migrations/20261108120000_lock_security_definer_helpers.sql",
     ]) {
       execFileSync(
         "sudo",
@@ -328,6 +329,136 @@ rollback;`,
     );
     assert.equal(asUser(admin.id, "select count(*) from public.waitlist_signups;"), "1");
     assert.equal(asUser(resident.id, "select count(*) from public.waitlist_signups;"), "0");
+
+    const otherHoa = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const otherUnit = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const stranger = "99999999-9999-4999-8999-999999999999";
+    psql(
+      database,
+      `insert into public.hoas (id, registered_name) values ('${otherHoa}', 'Other HOA');
+insert into public.units (id, hoa_id, label, rate_type, rate_centavos)
+values ('${otherUnit}', '${otherHoa}', 'Other Lot', 'flat', 100);`,
+    );
+
+    assert.equal(
+      psql(
+        database,
+        `select count(*) from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname in ('current_hoa_id', 'current_unit_id', 'is_admin_treasurer', 'can_read_unit');`,
+      ).trim(),
+      "0",
+    );
+
+    for (const name of [
+      "private.current_hoa_id()",
+      "private.current_unit_id()",
+      "private.is_admin_treasurer()",
+      "private.can_read_unit(uuid, uuid)",
+    ]) {
+      assert.equal(
+        psql(database, `select has_function_privilege('anon', '${name}', 'execute');`).trim(),
+        "f",
+        `${name} must not be executable by anon`,
+      );
+      assert.equal(
+        psql(database, `select has_function_privilege('public', '${name}', 'execute');`).trim(),
+        "f",
+        `${name} must not be executable by public`,
+      );
+      assert.equal(
+        psql(
+          database,
+          `select 'search_path=""' = any(proconfig)
+from pg_proc
+where oid = '${name}'::regprocedure;`,
+        ).trim(),
+        "t",
+        `${name} must set an empty search_path`,
+      );
+    }
+
+    psql(
+      database,
+      `do $probe$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'duesko_public_probe') then
+    create role duesko_public_probe nologin;
+  end if;
+end
+$probe$;`,
+    );
+
+    for (const role of ["anon", "duesko_public_probe"]) {
+      for (const call of [
+        "perform private.current_hoa_id()",
+        "perform private.current_unit_id()",
+        "perform private.is_admin_treasurer()",
+        `perform private.can_read_unit('${admin.hoaId}', '${resident.unitId}')`,
+      ]) {
+        psql(
+          database,
+          `begin;
+set local role ${role};
+do $denied$
+begin
+  ${call};
+  raise exception 'unauthorized call succeeded';
+exception
+  when insufficient_privilege then
+    null;
+  when others then
+    if sqlerrm = 'unauthorized call succeeded' then
+      raise;
+    end if;
+    if sqlstate <> '42501' then
+      raise;
+    end if;
+end
+$denied$;
+rollback;`,
+        );
+      }
+    }
+
+    assert.equal(asUser(stranger, "select private.current_hoa_id() is null;"), "t");
+    assert.equal(asUser(stranger, "select private.current_unit_id() is null;"), "t");
+    assert.equal(asUser(stranger, "select private.is_admin_treasurer();"), "f");
+    assert.equal(
+      asUser(stranger, `select private.can_read_unit('${admin.hoaId}', '${resident.unitId}');`),
+      "f",
+    );
+    assert.equal(asUser(resident.id, "select private.is_admin_treasurer();"), "f");
+    assert.equal(asUser(resident.id, "select private.current_hoa_id()::text;"), admin.hoaId);
+    assert.equal(asUser(resident.id, "select private.current_unit_id()::text;"), resident.unitId);
+    assert.equal(
+      asUser(resident.id, `select private.can_read_unit('${admin.hoaId}', '${resident.unitId}');`),
+      "t",
+    );
+    assert.equal(
+      asUser(
+        resident.id,
+        `select private.can_read_unit('${admin.hoaId}', '22222222-2222-4222-8222-222222222202');`,
+      ),
+      "f",
+    );
+    assert.equal(
+      asUser(resident.id, `select private.can_read_unit('${otherHoa}', '${otherUnit}');`),
+      "f",
+    );
+    assert.equal(asUser(admin.id, "select private.is_admin_treasurer();"), "t");
+    assert.equal(
+      asUser(admin.id, `select private.can_read_unit('${otherHoa}', '${otherUnit}');`),
+      "f",
+    );
+    assert.equal(
+      asUser(
+        admin.id,
+        `select private.can_read_unit('${admin.hoaId}', '22222222-2222-4222-8222-222222222202');`,
+      ),
+      "t",
+    );
     psql(
       database,
       `begin;
