@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+const reuseServer = !process.env.CI;
+
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,
@@ -22,6 +24,7 @@ export default defineConfig({
         "**/uma-review-3-screens.spec.ts",
         "**/uma-review-4-screens.spec.ts",
         "**/landing-screens.spec.ts",
+        "**/day7-screens.spec.ts",
         "**/waitlist-off.spec.ts",
       ],
       use: { baseURL: "http://127.0.0.1:43117" },
@@ -33,6 +36,7 @@ export default defineConfig({
         "**/uma-review-3-screens.spec.ts",
         "**/uma-review-4-screens.spec.ts",
         "**/landing-screens.spec.ts",
+        "**/day7-screens.spec.ts",
       ],
       use: { baseURL: "http://127.0.0.1:43119" },
     },
@@ -51,28 +55,28 @@ export default defineConfig({
     {
       command: "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_PUBLIC_DUESKO_WAITLIST_OPEN=true npm run dev",
       url: "http://127.0.0.1:43117",
-      reuseExistingServer: false,
+      reuseExistingServer: reuseServer,
       timeout: 120_000,
     },
     {
       command:
         "NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next build && NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-test-site npx next start --hostname 0.0.0.0 --port 43118",
       url: "http://127.0.0.1:43118",
-      reuseExistingServer: false,
+      reuseExistingServer: reuseServer,
       timeout: 180_000,
     },
     {
       command:
         "DUESKO_E2E=1 NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-screens npx next build && DUESKO_E2E=1 NEXT_PUBLIC_DUESKO_TEST_SITE=true NEXT_DIST_DIR=.next-screens npx next start --hostname 0.0.0.0 --port 43119",
       url: "http://127.0.0.1:43119",
-      reuseExistingServer: false,
+      reuseExistingServer: reuseServer,
       timeout: 180_000,
     },
     {
       command:
         "env -u NEXT_PUBLIC_DUESKO_TEST_SITE NEXT_DIST_DIR=.next-off npx next build && env -u NEXT_PUBLIC_DUESKO_TEST_SITE NEXT_DIST_DIR=.next-off npx next start --hostname 0.0.0.0 --port 43120",
       url: "http://127.0.0.1:43120",
-      reuseExistingServer: false,
+      reuseExistingServer: reuseServer,
       timeout: 180_000,
     },
   ],

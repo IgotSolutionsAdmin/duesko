@@ -2,7 +2,7 @@
 
 DuesKo is a dues collection app for Philippine homeowners' associations. A resident sees only their own unit. An admin treasurer sees every unit and who has paid. Money is stored as integer centavos and shown as Philippine pesos.
 
-The public landing page is `/`. Officers and residents choose a portal at `/login`. Officers sign in at `/admin/login`. Residents sign in at `/resident/login`. A resident uploads a photo of a GCash, bank, or other payment. An officer approves or rejects it. Cash and other manual payments are recorded by the officer and approved immediately. There is no online checkout.
+The public landing page is `/`. Officers and residents choose a portal at `/login`. Officers sign in at `/admin/login`. Residents sign in at `/resident/login`. A resident uploads a photo of a GCash, bank, or other payment. An officer approves or rejects it. Cash and other manual payments are recorded by the officer and approved immediately. DuesKo does not process or route payments.
 
 ## Run locally
 
@@ -64,7 +64,7 @@ Then:
 4. In the SQL editor, insert the association, its units, and `public.users`. A resident row needs `unit_id`. The SQL editor runs with rights that bypass row level security, which is required for the first association because authenticated clients cannot insert `hoas`.
 5. Put the public Supabase URL and anon key in `.env.local` and restart the app. Demo sign-in is not shown. Sign in with the email and the password that person chose, or with a magic link.
 
-`lib/supabase/service.ts` can build a service-role client for server-side maintenance. Pages and client components do not import it. PayMongo keys are not part of this step.
+`lib/supabase/service.ts` can build a service-role client for server-side maintenance. Pages and client components do not import it.
 
 ## Data layer
 

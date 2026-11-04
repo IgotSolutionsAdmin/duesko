@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { LANDING_FAQ, LANDING_HERO, LANDING_HOW, LANDING_PROBLEM } from "../lib/landing-copy";
+import { onlinePayForbiddenRegex } from "../lib/forbidden-online-pay";
 
 const forbiddenPhrases =
-  /\bofficial receipt\b|\bbir\b|\bcas\b|\baccredited\b|\bregistered\b|\bpayment link\b|\bgateway\b|\bpaymongo\b/i;
+  /\bofficial receipt\b|\bbir\b|\bcas\b|\baccredited\b|\bregistered\b/i;
 const standaloneOr = /(?<![A-Za-z])OR(?![A-Za-z])/;
+const onlinePayForbidden = onlinePayForbiddenRegex();
 
 for (const viewport of [
   { name: "desktop", width: 1440, height: 900 },
@@ -34,6 +36,7 @@ for (const viewport of [
 
       const landingText = await page.locator("body").innerText();
       expect(landingText).not.toMatch(forbiddenPhrases);
+      expect(landingText).not.toMatch(onlinePayForbidden);
       expect(landingText).not.toMatch(standaloneOr);
 
       await page.getByRole("banner").getByRole("link", { name: "Sign in" }).click();
@@ -47,6 +50,7 @@ for (const viewport of [
       await expect(page.getByText("Privacy Notice coming soon.")).toBeVisible();
       const privacyText = await page.locator("body").innerText();
       expect(privacyText).not.toMatch(forbiddenPhrases);
+      expect(privacyText).not.toMatch(onlinePayForbidden);
       expect(privacyText).not.toMatch(standaloneOr);
     });
   });

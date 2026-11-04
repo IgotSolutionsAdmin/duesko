@@ -6,7 +6,9 @@ const ACKNOWLEDGMENT_PHRASES = [
   "registered",
 ] as const;
 
-const MARKETING_PHRASES = ["payment link", "gateway", "paymongo"] as const;
+import { FORBIDDEN_ONLINE_PAY_PHRASES } from "./forbidden-online-pay";
+
+const MARKETING_PHRASES = FORBIDDEN_ONLINE_PAY_PHRASES;
 
 function matchesPhrase(text: string, phrase: string): boolean {
   const pattern = new RegExp(`\\b${phrase.replaceAll(" ", "\\s+")}\\b`, "i");

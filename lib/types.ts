@@ -63,7 +63,7 @@ export interface Payment {
   method: PaymentMethod;
   amountCentavos: number;
   paidAt: string;
-  /** Unused. Online checkout is out of scope. */
+  /** Unused legacy table. In-app checkout is out of scope. */
   providerPaymentId: string | null;
   referenceNo: string | null;
   hoaReferenceNo: string | null;

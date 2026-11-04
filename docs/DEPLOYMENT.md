@@ -62,6 +62,14 @@ In Supabase → **Authentication → URL configuration**:
 
 Invite and magic links should use redirect `https://duesko.vercel.app/auth/callback`.
 
+## Launch readiness (Day 7)
+
+- [ ] Landing at `/` and portal chooser at `/login`; no test-site banner in production
+- [ ] Waitlist closed (`NEXT_PUBLIC_DUESKO_WAITLIST_OPEN` unset); POST `/api/waitlist` returns 403
+- [ ] Product copy scan passes (`npm test` → forbidden online-pay wording)
+- [ ] Supabase migrations through `waitlist_signups`; RLS on every `public` table; `payment-proofs` bucket private
+- [ ] Smoke: officer charges, resident proof upload, approve/reject, cash record, acknowledgment, CSV export
+
 ## Post-deploy checklist
 
 - [ ] Latest `main` commit has Vercel status **success**.
