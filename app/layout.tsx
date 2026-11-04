@@ -14,12 +14,13 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://duesko.vercel.app"),
   title: {
     default: "DuesKo",
     template: "%s · DuesKo",
   },
   description:
-    "HOA dues collection for Philippine associations. Residents see their own unit. Officers see who has paid.",
+    "DuesKo makes it simple for HOAs and condos to collect monthly dues, track who paid, share reminders, and prepare collection reports. Join the waitlist.",
 };
 
 export const viewport: Viewport = {

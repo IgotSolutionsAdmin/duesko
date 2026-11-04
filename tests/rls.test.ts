@@ -143,6 +143,7 @@ grant select, insert on table storage.objects to authenticated;`,
       "supabase/migrations/20261103120000_payment_proofs.sql",
       "supabase/migrations/20261103180000_export_and_acknowledgments.sql",
       "supabase/migrations/20261103210000_how_to_pay.sql",
+      "supabase/migrations/20261107120000_waitlist_signups.sql",
     ]) {
       execFileSync(
         "sudo",
@@ -295,6 +296,67 @@ rollback;`,
     assert.equal(
       asUser(admin.id, "select count(*) from storage.objects;"),
       "1",
+    );
+
+    const waitlistInsert = `
+insert into public.waitlist_signups (
+  full_name, email, hoa_name, city, units_range, role, collect_methods, consent_at, user_agent
+) values (
+  'Maria Santos', 'maria.santos@example.com', 'Greenfields HOA', 'Quezon City',
+  '51-150', 'Treasurer', array['GCash'], now(), 'test'
+);`;
+    psql(
+      database,
+      `begin;
+set local role anon;
+${waitlistInsert}
+commit;`,
+    );
+    psql(
+      database,
+      `begin;
+set local role anon;
+do $$
+begin
+  perform count(*) from public.waitlist_signups;
+  raise exception 'anon select succeeded';
+exception
+  when insufficient_privilege then
+    null;
+end $$;
+rollback;`,
+    );
+    assert.equal(asUser(admin.id, "select count(*) from public.waitlist_signups;"), "1");
+    assert.equal(asUser(resident.id, "select count(*) from public.waitlist_signups;"), "0");
+    psql(
+      database,
+      `begin;
+set local role anon;
+do $$
+begin
+  update public.waitlist_signups set city = 'Makati';
+  if found then
+    raise exception 'anon update succeeded';
+  end if;
+exception
+  when insufficient_privilege then null;
+  when others then
+    if sqlerrm = 'anon update succeeded' then raise; end if;
+    if sqlstate <> '42501' then raise; end if;
+end $$;
+do $$
+begin
+  delete from public.waitlist_signups;
+  if found then
+    raise exception 'anon delete succeeded';
+  end if;
+exception
+  when insufficient_privilege then null;
+  when others then
+    if sqlerrm = 'anon delete succeeded' then raise; end if;
+    if sqlstate <> '42501' then raise; end if;
+end $$;
+rollback;`,
     );
   });
 });

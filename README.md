@@ -2,7 +2,7 @@
 
 DuesKo is a dues collection app for Philippine homeowners' associations. A resident sees only their own unit. An admin treasurer sees every unit and who has paid. Money is stored as integer centavos and shown as Philippine pesos.
 
-Officers and residents use separate portals. Officers sign in at `/admin/login`. Residents sign in at `/resident/login`. A resident uploads a photo of a GCash, bank, or other payment. An officer approves or rejects it. Cash and other manual payments are recorded by the officer and approved immediately. There is no online checkout.
+The public landing page is `/`. Officers and residents choose a portal at `/login`. Officers sign in at `/admin/login`. Residents sign in at `/resident/login`. A resident uploads a photo of a GCash, bank, or other payment. An officer approves or rejects it. Cash and other manual payments are recorded by the officer and approved immediately. There is no online checkout.
 
 ## Run locally
 
@@ -38,6 +38,7 @@ Copy `.env.example` to `.env.local`. Leave the values empty to use the mock. Fil
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser and server. Row level security still applies. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only, in `lib/supabase/service.ts`. Bypasses row level security. Never use a `NEXT_PUBLIC_` name for it. |
 | `NEXT_PUBLIC_DUESKO_TEST_SITE` | Set to `true` for a public sample site. Turns on the test banner. The in-memory mock is used only when the Supabase URL and anon key are unset. Passwordless demo sign-in stays off in production. |
+| `NEXT_PUBLIC_DUESKO_WAITLIST_OPEN` | Set to `true` only when the waitlist may accept signups. Leave unset until the privacy notice is approved. |
 
 The dashboard may label the public key "anon public" or "publishable". Put that value in `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
@@ -48,6 +49,8 @@ Apply the migration files in this order:
 1. `supabase/migrations/20261102120000_v3_initial.sql`
 2. `supabase/migrations/20261103120000_payment_proofs.sql`
 3. `supabase/migrations/20261103180000_export_and_acknowledgments.sql`
+4. `supabase/migrations/20261103210000_how_to_pay.sql`
+5. `supabase/migrations/20261107120000_waitlist_signups.sql`
 
 The second migration adds proof status, the review audit columns, and a private Storage bucket named `payment-proofs`. Object paths are `{hoa_id}/{charge_id}/{uuid}.ext`. Only the resident for that charge can upload. That resident and the HOA officers can read the file through a short-lived signed URL.
 

@@ -96,16 +96,4 @@ export function renderAcknowledgmentText(fields: AcknowledgmentFields): string {
   ].join("\n");
 }
 
-const FORBIDDEN_PHRASES = ["official receipt", "bir", "cas", "accredited", "registered"] as const;
-
-/** Words Legal asked us never to print. OR is the abbreviation, not English "or". */
-export function forbiddenAcknowledgmentWords(text: string): string[] {
-  const found: string[] = [];
-  const lower = text.toLowerCase();
-  for (const phrase of FORBIDDEN_PHRASES) {
-    const pattern = new RegExp(`\\b${phrase.replace(" ", "\\s+")}\\b`, "i");
-    if (pattern.test(lower)) found.push(phrase);
-  }
-  if (/(?<![A-Za-z])OR(?![A-Za-z])/.test(text)) found.push("OR");
-  return found;
-}
+export { forbiddenAcknowledgmentWords } from "./forbidden-words";
